@@ -9,3 +9,4 @@ yarn.lock
 .gitignore
 .editorconfig
 .env.template
+README.md
