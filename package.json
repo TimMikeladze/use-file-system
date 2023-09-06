@@ -1,7 +1,7 @@
 {
   "name": "use-file-system",
   "description": "A set of React hooks to interact with the File System API. Watch a directory for changes and return a map of filepaths & contents when a file is added, modified or removed.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
   "license": "MIT",
   "keywords": [
