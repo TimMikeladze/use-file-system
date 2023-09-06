@@ -95,33 +95,34 @@ export const Example = () => {
 
 ### :gear: gitFilter
 
-| Function    | Type       |
-| ----------- | ---------- |
+| Function | Type |
+| ---------- | ---------- |
 | `gitFilter` | `FilterFn` |
 
 ### :gear: distFilter
 
-| Function     | Type       |
-| ------------ | ---------- |
+| Function | Type |
+| ---------- | ---------- |
 | `distFilter` | `FilterFn` |
 
 ### :gear: miscFilter
 
-| Function     | Type       |
-| ------------ | ---------- |
+| Function | Type |
+| ---------- | ---------- |
 | `miscFilter` | `FilterFn` |
 
 ### :gear: processDirectory
 
-| Function           | Type                                                                                                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Function | Type |
+| ---------- | ---------- |
 | `processDirectory` | `(directoryHandle: FileSystemDirectoryHandle, directoryPath: string, filters: Filter[], includeFiles: Map<string, FileSystemFileHandle>, ignoreFilePaths: Set<...>) => Promise<...>` |
 
 ### :gear: useWatchDirectory
 
-| Function            | Type                                                                                                                                                                      |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Function | Type |
+| ---------- | ---------- |
 | `useWatchDirectory` | `(props: UseFileHandlingHookProps) => { handles: Map<string, FileSystemFileHandle>; onDirectorySelection: () => Promise<void>; files: Map<...>; isProcessing: boolean; }` |
+
 
 ## :wrench: Constants
 
@@ -129,8 +130,10 @@ export const Example = () => {
 
 ### :gear: commonFilters
 
-| Constant        | Type         |
-| --------------- | ------------ |
+| Constant | Type |
+| ---------- | ---------- |
 | `commonFilters` | `FilterFn[]` |
+
+
 
 <!-- TSDOC_END -->
