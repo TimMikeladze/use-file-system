@@ -76,9 +76,6 @@ export const distFilter: FilterFn = async () => {
     if (filepath.includes(`/node_modules/`)) {
       return true;
     }
-    if (filepath.includes(`/node_modules/`)) {
-      return true;
-    }
     if (filepath.includes(`/.next/`)) {
       return true;
     }

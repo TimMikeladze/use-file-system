@@ -30,7 +30,7 @@ export interface UseFileHandlingHookProps {
 
 const DEFAULT_POLL_INTERVAL = 500;
 
-export const useWatchDirectory = (props: UseFileHandlingHookProps) => {
+export const useFileSystem = (props: UseFileHandlingHookProps) => {
   const {
     onFilesAdded: onAddFile,
     onFilesChanged: onChangeFile,

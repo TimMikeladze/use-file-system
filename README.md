@@ -24,10 +24,10 @@ pnpm add use-file-system
 
 ```tsx
 import React from 'react';
-import { commonFilters, useWatchDirectory } from 'use-file-system';
+import { commonFilters, useFileSystem } from 'use-file-system';
 
 export const Example = () => {
-  const { onDirectorySelection, files } = useWatchDirectory({
+  const { onDirectorySelection, files } = useFileSystem({
     filters: commonFilters, // filters out .gitignore paths and output paths like node_modules or dist, etc
     onFilesAdded: (newFiles, previousFiles) => {
       console.log('onFilesAdded', newFiles, previousFiles);
@@ -93,7 +93,7 @@ export const Example = () => {
 - [distFilter](#gear-distfilter)
 - [miscFilter](#gear-miscfilter)
 - [processDirectory](#gear-processdirectory)
-- [useWatchDirectory](#gear-usewatchdirectory)
+- [useFileSystem](#gear-usefilesystem)
 
 ### :gear: gitFilter
 
@@ -119,11 +119,11 @@ export const Example = () => {
 | ---------- | ---------- |
 | `processDirectory` | `(directoryHandle: FileSystemDirectoryHandle, directoryPath: string, filters: Filter[], includeFiles: Map<string, FileSystemFileHandle>, ignoreFilePaths: Set<...>) => Promise<...>` |
 
-### :gear: useWatchDirectory
+### :gear: useFileSystem
 
 | Function | Type |
 | ---------- | ---------- |
-| `useWatchDirectory` | `(props: UseFileHandlingHookProps) => { handles: Map<string, FileSystemFileHandle>; onDirectorySelection: () => Promise<void>; files: Map<...>; isProcessing: boolean; }` |
+| `useFileSystem` | `(props: UseFileHandlingHookProps) => { handles: Map<string, FileSystemFileHandle>; onDirectorySelection: () => Promise<void>; files: Map<...>; isProcessing: boolean; }` |
 
 
 ## :wrench: Constants

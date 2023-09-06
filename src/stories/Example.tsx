@@ -1,9 +1,9 @@
 import React from 'react';
 import { action } from '@storybook/addon-actions';
-import { commonFilters, useWatchDirectory } from '..';
+import { commonFilters, useFileSystem } from '..';
 
 export const Example = () => {
-  const { onDirectorySelection, files } = useWatchDirectory({
+  const { onDirectorySelection, files } = useFileSystem({
     filters: commonFilters,
     onFilesAdded: (newFiles, previousFiles) => {
       console.log('onFilesAdded', newFiles, previousFiles);

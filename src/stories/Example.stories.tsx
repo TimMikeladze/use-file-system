@@ -12,6 +12,4 @@ const Template: StoryFn<typeof Example> = () => <Example />;
 
 export const Primary = Template.bind({});
 
-Primary.args = {
-  text: 'Clicked this many times:',
-};
+Primary.args = {};
