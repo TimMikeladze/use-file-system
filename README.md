@@ -4,6 +4,8 @@ A set of React hooks to interact with the [File System API](https://developer.mo
 
 Watch a directory for changes and return a map of filepaths & contents when a file is added, modified or removed.
 
+Check out the 📖 [**Storybook**](https://timmikeladze.github.io/use-file-system) for a live example.
+
 > 🚧 Under active development. Expect breaking changes until v1.0.0.
 
 ## 📡 Install
@@ -87,11 +89,17 @@ export const Example = () => {
 
 ## :toolbox: Functions
 
-- [gitFilter](#gear-gitfilter)
-- [distFilter](#gear-distfilter)
-- [miscFilter](#gear-miscfilter)
-- [processDirectory](#gear-processdirectory)
-- [useWatchDirectory](#gear-usewatchdirectory)
+- [🗂️ use-file-system](#️-use-file-system)
+  - [📡 Install](#-install)
+  - [🚀 Getting Started](#-getting-started)
+  - [:toolbox: Functions](#toolbox-functions)
+    - [:gear: gitFilter](#gear-gitfilter)
+    - [:gear: distFilter](#gear-distfilter)
+    - [:gear: miscFilter](#gear-miscfilter)
+    - [:gear: processDirectory](#gear-processdirectory)
+    - [:gear: useWatchDirectory](#gear-usewatchdirectory)
+  - [:wrench: Constants](#wrench-constants)
+    - [:gear: commonFilters](#gear-commonfilters)
 
 ### :gear: gitFilter
 
