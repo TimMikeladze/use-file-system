@@ -11,11 +11,11 @@ Check out the 📖 [**Storybook**](https://timmikeladze.github.io/use-file-syste
 ## 📡 Install
 
 ```console
-npm install next-upload
+npm install use-file-system
 
-yarn add next-upload
+yarn add use-file-system
 
-pnpm add next-upload
+pnpm add use-file-system
 ```
 
 > 👋 Hello there! Follow me [@linesofcode](https://twitter.com/linesofcode) or visit [linesofcode.dev](https://linesofcode.dev) for more cool projects like this one.
