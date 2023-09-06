@@ -87,17 +87,11 @@ export const Example = () => {
 
 ## :toolbox: Functions
 
-- [🗂️ use-file-system](#️-use-file-system)
-  - [📡 Install](#-install)
-  - [🚀 Getting Started](#-getting-started)
-  - [:toolbox: Functions](#toolbox-functions)
-    - [:gear: gitFilter](#gear-gitfilter)
-    - [:gear: distFilter](#gear-distfilter)
-    - [:gear: miscFilter](#gear-miscfilter)
-    - [:gear: processDirectory](#gear-processdirectory)
-    - [:gear: useWatchDirectory](#gear-usewatchdirectory)
-  - [:wrench: Constants](#wrench-constants)
-    - [:gear: commonFilters](#gear-commonfilters)
+- [gitFilter](#gear-gitfilter)
+- [distFilter](#gear-distfilter)
+- [miscFilter](#gear-miscfilter)
+- [processDirectory](#gear-processdirectory)
+- [useWatchDirectory](#gear-usewatchdirectory)
 
 ### :gear: gitFilter
 
