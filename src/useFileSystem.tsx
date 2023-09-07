@@ -229,6 +229,7 @@ export const useFileSystem = (props: UseFileHandlingHookProps) => {
     onDirectorySelection,
     files,
     isProcessing,
+    isBrowserSupported: window !== undefined && 'showDirectoryPicker' in window,
   };
 };
 

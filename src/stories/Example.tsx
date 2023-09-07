@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { action } from '@storybook/addon-actions';
 import { commonFilters, useFileSystem } from '..';
 
 export const Example = () => {
-  const { onDirectorySelection, files } = useFileSystem({
+  const { onDirectorySelection, files, isBrowserSupported } = useFileSystem({
     filters: commonFilters,
     onFilesAdded: (newFiles, previousFiles) => {
       console.log('onFilesAdded', newFiles, previousFiles);
@@ -21,7 +21,7 @@ export const Example = () => {
 
   const [renderCount, setRenderCount] = React.useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setRenderCount((count) => count + 1);
   }, [files]);
 
@@ -33,6 +33,16 @@ export const Example = () => {
         gap: '1rem',
       }}
     >
+      {!isBrowserSupported && (
+        <div
+          style={{
+            color: 'red',
+          }}
+        >
+          Your browser does not support the File System Access API. Please try
+          again in a different browser, such as Chrome.
+        </div>
+      )}
       <div>
         Select a directory on your file-system to watch for changes. The files
         will be listed below. If you have a .gitignore file in the directory,

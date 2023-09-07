@@ -23,11 +23,11 @@ pnpm add use-file-system
 ## 🚀 Getting Started
 
 ```tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { commonFilters, useFileSystem } from 'use-file-system';
 
 export const Example = () => {
-  const { onDirectorySelection, files } = useFileSystem({
+  const { onDirectorySelection, files, isBrowserSupported } = useFileSystem({
     filters: commonFilters, // filters out .gitignore paths and output paths like node_modules or dist, etc
     onFilesAdded: (newFiles, previousFiles) => {
       console.log('onFilesAdded', newFiles, previousFiles);
@@ -42,7 +42,7 @@ export const Example = () => {
 
   const [renderCount, setRenderCount] = React.useState(0);
 
-  React.useEffect(() => {
+ useEffect(() => {
     setRenderCount((count) => count + 1);
   }, [files]);
 
@@ -54,6 +54,16 @@ export const Example = () => {
         gap: '1rem',
       }}
     >
+      {!isBrowserSupported && (
+        <div
+          style={{
+            color: 'red',
+          }}
+        >
+          Your browser does not support the File System Access API. Please try
+          again in a different browser, such as Chrome.
+        </div>
+      )}
       <div>
         Select a directory on your file-system to watch for changes. The files
         will be listed below. If you have a .gitignore file in the directory,
@@ -123,7 +133,7 @@ export const Example = () => {
 
 | Function | Type |
 | ---------- | ---------- |
-| `useFileSystem` | `(props: UseFileHandlingHookProps) => { handles: Map<string, FileSystemFileHandle>; onDirectorySelection: () => Promise<void>; files: Map<...>; isProcessing: boolean; }` |
+| `useFileSystem` | `(props: UseFileHandlingHookProps) => { handles: Map<string, FileSystemFileHandle>; onDirectorySelection: () => Promise<void>; files: Map<...>; isProcessing: boolean; isBrowserSupported: boolean; }` |
 
 
 ## :wrench: Constants
