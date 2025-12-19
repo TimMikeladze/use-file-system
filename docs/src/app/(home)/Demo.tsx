@@ -4,7 +4,7 @@ import { Highlight, themes } from "prism-react-renderer";
 import React, { type JSX } from "react";
 import "react-install-command/styles.css";
 import { InstallCommand } from "react-install-command";
-import { commonFilters, useFs } from "use-fs";
+import { type FileChange, type FilePath, defaultFilters, useFs } from "use-fs";
 
 type FileState = {
 	path: string;
@@ -20,7 +20,7 @@ const App = () => {
 	});
 	const [fileHistory, setFileHistory] = React.useState<
 		Array<{
-			type: "added" | "removed";
+			type: "added" | "removed" | "modified";
 			path: string;
 			timestamp: number;
 		}>
@@ -30,47 +30,36 @@ const App = () => {
 	const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
 
 	const {
-		onDirectorySelection,
-		onClear,
+		selectDirectory,
+		clear,
 		files,
-		isBrowserSupported,
+		isSupported,
 		writeFile,
-		setFiles,
+		readFile,
 		startPolling,
 		stopPolling,
 		isPolling,
 	} = useFs({
-		filters: commonFilters,
-		onFilesAdded: (newFiles, previousFiles) => {
-			console.log("onFilesAdded", newFiles, previousFiles);
-			const newEntries = Array.from(newFiles.keys()).map((path) => ({
-				type: "added" as const,
-				path,
+		filters: defaultFilters,
+		onChange: (changes: FileChange[]) => {
+			const historyEntries = changes.map((change) => ({
+				type:
+					change.type === "deleted"
+						? ("removed" as const)
+						: (change.type as "added" | "modified"),
+				path: change.type === "deleted" ? change.path : change.entry.path,
 				timestamp: Date.now(),
 			}));
-			setFileHistory((prev) => [...newEntries, ...prev].slice(0, 50));
-		},
-		onFilesChanged: (changedFiles, previousFiles) => {
-			console.log("onFilesChanged", changedFiles, previousFiles);
+			setFileHistory((prev) => [...historyEntries, ...prev].slice(0, 50));
 
-			const changedFilesArray = Array.from(changedFiles);
-			if (changedFilesArray.length > 0) {
-				const [filePath, content] = changedFilesArray[0];
-				const previousContent = previousFiles.get(filePath) || null;
-				setSelectedFile({ path: filePath, content, previousContent });
+			// Auto-select first modified file
+			const modified = changes.find((c) => c.type === "modified");
+			if (modified && modified.type === "modified") {
+				handleFileSelectFromChange(modified.entry.path);
 			}
 		},
-		onFilesDeleted: (deletedFiles, previousFiles) => {
-			console.log("onFilesDeleted", deletedFiles, previousFiles);
-			if (deletedFiles.has(selectedFile.path)) {
-				setSelectedFile({ path: "", content: null, previousContent: null });
-			}
-			const deletedEntries = Array.from(deletedFiles.keys()).map((path) => ({
-				type: "removed" as const,
-				path,
-				timestamp: Date.now(),
-			}));
-			setFileHistory((prev) => [...deletedEntries, ...prev].slice(0, 50));
+		onError: (error) => {
+			console.error("File system error:", error);
 		},
 	});
 
@@ -79,14 +68,14 @@ const App = () => {
 	const handleDirectorySelection = async () => {
 		setIsLoading(true);
 		try {
-			await onDirectorySelection();
+			await selectDirectory();
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	const handleClear = () => {
-		onClear();
+		clear();
 		setSelectedFile({ path: "", content: null, previousContent: null });
 		setFileHistory([]);
 	};
@@ -162,41 +151,52 @@ const App = () => {
 		return diff;
 	};
 
-	const handleFileSelect = (path: string) => {
-		const content = files.get(path) || null;
-		setSelectedFile({
-			path,
-			content,
-			previousContent: null,
-		});
-		setIsEditMode(false);
-		setEditableContent(content || "");
-		setHasUnsavedChanges(false);
+	const handleFileSelectFromChange = async (path: FilePath) => {
+		try {
+			const content = await readFile(path);
+			const previousContent =
+				selectedFile.path === path ? selectedFile.content : null;
+			setSelectedFile({
+				path,
+				content,
+				previousContent,
+			});
+		} catch {
+			// File may have been deleted
+		}
+	};
+
+	const handleFileSelect = async (path: FilePath) => {
+		try {
+			const content = await readFile(path);
+			setSelectedFile({
+				path,
+				content,
+				previousContent: null,
+			});
+			setIsEditMode(false);
+			setEditableContent(content);
+			setHasUnsavedChanges(false);
+		} catch (error) {
+			console.error("Error reading file:", error);
+		}
 	};
 
 	const handleSave = async () => {
 		if (selectedFile.path) {
 			try {
 				// Validate the selected file path
-				if (!files.has(selectedFile.path)) {
+				if (!files.has(selectedFile.path as FilePath)) {
 					throw new Error("Selected file no longer exists");
 				}
 
-				await writeFile(selectedFile.path, editableContent, { truncate: true });
+				await writeFile(selectedFile.path as FilePath, editableContent);
 				setSelectedFile((prev) => ({
 					...prev,
 					previousContent: prev.content,
 					content: editableContent,
 				}));
 				setHasUnsavedChanges(false);
-
-				// Instead of using setFiles, we can force a refresh by clearing and resetting the selected file
-				const content = files.get(selectedFile.path) || null;
-				setSelectedFile({
-					path: selectedFile.path,
-					content,
-					previousContent: null,
-				});
 			} catch (error: unknown) {
 				console.error("Error saving file:", error);
 				if (error instanceof Error) {
@@ -311,38 +311,46 @@ const App = () => {
 									code={`import { useFs } from 'use-fs';
 
 function App() {
-  const { 
-    onDirectorySelection, 
+  const {
+    selectDirectory,
     files,
-    isBrowserSupported 
+    readFile,
+    isSupported,
+    onChange
   } = useFs({
-    onFilesAdded: (newFiles, previousFiles) => {
-      console.log('Files added:', newFiles);
-    },
-    onFilesChanged: (changedFiles, previousFiles) => {
-      console.log('Files changed:', changedFiles);
-    },
-    onFilesDeleted: (deletedFiles, previousFiles) => {
-      console.log('Files deleted:', deletedFiles);
+    onChange: (changes) => {
+      for (const change of changes) {
+        switch (change.type) {
+          case 'added':
+            console.log('Added:', change.entry.path);
+            break;
+          case 'modified':
+            console.log('Modified:', change.entry.path);
+            break;
+          case 'deleted':
+            console.log('Deleted:', change.path);
+            break;
+        }
+      }
     },
   });
 
-  if (!isBrowserSupported) {
+  if (!isSupported) {
     return <div>Browser not supported</div>;
   }
 
   return (
     <div>
-      <button onClick={onDirectorySelection}>
+      <button onClick={selectDirectory}>
         Select Directory
       </button>
-	  {files.size > 0 && (
-		<div>
-			{Array.from(files.keys()).map((path) => (
-				<div key={path}>{path}</div>
-			))}
-		</div>
-	  )}
+      {files.size > 0 && (
+        <div>
+          {Array.from(files.keys()).map((path) => (
+            <div key={path}>{path}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }`}
@@ -491,7 +499,7 @@ function App() {
 
 						{/* File List */}
 						<div className="flex-1 overflow-hidden">
-							{!isBrowserSupported && (
+							{!isSupported && (
 								<div className="m-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-700 text-sm dark:border-amber-500/20 dark:bg-amber-900/10 dark:text-amber-400">
 									<div className="flex items-center">
 										<svg
@@ -692,6 +700,13 @@ function App() {
 													strokeWidth={2}
 													d="M12 4v16m8-8H4"
 												/>
+											) : entry.type === "modified" ? (
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+												/>
 											) : (
 												<path
 													strokeLinecap="round"
@@ -705,7 +720,9 @@ function App() {
 											className={`text-sm ${
 												entry.type === "added"
 													? "text-emerald-700 dark:text-emerald-400"
-													: "text-red-700 dark:text-red-400"
+													: entry.type === "modified"
+														? "text-amber-700 dark:text-amber-400"
+														: "text-red-700 dark:text-red-400"
 											}`}
 										>
 											{entry.path}
