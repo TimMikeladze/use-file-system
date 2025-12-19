@@ -36,3 +36,46 @@ export {
 
 // Scanner utilities (for advanced use cases)
 export { collectEntries, detectChanges, scanDirectory } from "./scanner";
+
+// ============================================================================
+// OPFS (Origin Private File System)
+// ============================================================================
+
+// OPFS React hook
+export { useOpfs } from "./opfs";
+
+// OPFS utilities
+export {
+	OpfsBroadcast,
+	isOpfsSupported,
+	getOpfsRoot,
+	getDirectoryHandle,
+	getFileHandle,
+	readFile as opfsReadFile,
+	readFileBuffer as opfsReadFileBuffer,
+	writeFile as opfsWriteFile,
+	deleteFile as opfsDeleteFile,
+	createDirectory,
+	deleteDirectory,
+	exists as opfsExists,
+	getFileEntry,
+	scanDirectory as opfsScanDirectory,
+} from "./opfs";
+
+// OPFS types
+export type {
+	OpfsPath,
+	OpfsEntry,
+	OpfsChange,
+	OpfsBroadcastMessage,
+	UseOpfsOptions,
+	UseOpfsResult,
+} from "./types";
+
+// OPFS errors and utilities
+export {
+	toOpfsPath,
+	OpfsNotSupportedError,
+	OpfsFileNotFoundError,
+	OpfsDirectoryNotFoundError,
+} from "./types";

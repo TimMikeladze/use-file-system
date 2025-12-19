@@ -1,124 +1,124 @@
 {
-  "name": "use-fs",
-  "description": "A React hook for integrating with the File System Access API. Enables web applications to seamlessly work with files on a user's local system.",
-  "version": "1.0.1",
-  "author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
-  "license": "MIT",
-  "keywords": [
-    "react",
-    "files",
-    "watcher",
-    "file watcher",
-    "directory watcher",
-    "filesystem",
-    "file system",
-    "file system api",
-    "react-hooks",
-    "hooks",
-    "use",
-    "file-system-api",
-    "browser",
-    "web",
-    "file-access",
-    "directory-access",
-    "file-monitoring"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:TimMikeladze/use-fs.git"
-  },
-  "scripts": {
-    "dev": "concurrently \"pnpm build --watch\" \"pnpm test\" ",
-    "build": "tsup",
-    "lint": "biome check --write --unsafe .",
-    "lint:ci": "biome check --unsafe .",
-    "test": "vitest",
-    "test:ci": "vitest run --coverage",
-    "commit": "cz",
-    "storybook": "storybook dev -p 6006",
-    "storybook:build": "storybook build",
-    "release": "pnpm build && pnpm release-it",
-    "link:self": "pnpm link --global",
-    "prepare": "lefthook install"
-  },
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/@ryansonshine/cz-conventional-changelog"
-    }
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore(release): v${version}"
-    },
-    "github": {
-      "release": true
-    },
-    "npm": {
-      "publish": false
-    }
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@ryansonshine/commitizen": "4.2.8",
-    "@ryansonshine/cz-conventional-changelog": "3.3.4",
-    "@storybook/addon-actions": "^8.5.3",
-    "@storybook/addon-essentials": "8.5.3",
-    "@storybook/addon-interactions": "8.5.3",
-    "@storybook/addon-links": "8.5.3",
-    "@storybook/addon-webpack5-compiler-swc": "2.0.0",
-    "@storybook/blocks": "8.5.3",
-    "@storybook/react": "8.5.3",
-    "@storybook/react-webpack5": "8.5.3",
-    "@storybook/test": "8.5.3",
-    "@testing-library/jest-dom": "6.6.3",
-    "@testing-library/react": "16.2.0",
-    "@types/node": "22.13.1",
-    "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
-    "@types/react-test-renderer": "19.0.0",
-    "@vitest/coverage-v8": "3.0.5",
-    "concurrently": "9.1.2",
-    "jsdom": "26.0.0",
-    "lefthook": "1.10.10",
-    "prop-types": "15.8.1",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "react-test-renderer": "19.0.0",
-    "release-it": "18.1.2",
-    "storybook": "8.5.3",
-    "ts-node": "10.9.2",
-    "tsconfig-paths": "4.2.0",
-    "tsup": "8.3.6",
-    "tsx": "4.19.2",
-    "typescript": "5.7.3",
-    "vitest": "3.0.5"
-  },
-  "peerDependencies": {
-    "react": ">=17",
-    "react-dom": ">=17"
-  },
-  "pnpm": {
-    "overrides": {
-      "micromatch@<4.0.8": ">=4.0.8"
-    },
-    "onlyBuiltDependencies": [
-      "lefthook"
-    ]
-  },
-  "dependencies": {
-    "ignore": "^7.0.3"
-  }
+	"name": "use-fs",
+	"description": "A React hook for integrating with the File System Access API. Enables web applications to seamlessly work with files on a user's local system.",
+	"version": "1.0.1",
+	"author": "Tim Mikeladze <tim.mikeladze@gmail.com>",
+	"license": "MIT",
+	"keywords": [
+		"react",
+		"files",
+		"watcher",
+		"file watcher",
+		"directory watcher",
+		"filesystem",
+		"file system",
+		"file system api",
+		"react-hooks",
+		"hooks",
+		"use",
+		"file-system-api",
+		"browser",
+		"web",
+		"file-access",
+		"directory-access",
+		"file-monitoring"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:TimMikeladze/use-fs.git"
+	},
+	"scripts": {
+		"dev": "concurrently \"pnpm build --watch\" \"pnpm test\" ",
+		"build": "tsup",
+		"lint": "biome check --write --unsafe .",
+		"lint:ci": "biome check --unsafe .",
+		"test": "vitest",
+		"test:ci": "vitest run --coverage",
+		"commit": "cz",
+		"storybook": "storybook dev -p 6006",
+		"storybook:build": "storybook build",
+		"release": "pnpm build && pnpm release-it",
+		"link:self": "pnpm link --global",
+		"prepare": "lefthook install"
+	},
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"require": "./dist/index.js",
+			"import": "./dist/index.mjs"
+		},
+		"./opfs/worker": {
+			"require": "./dist/opfs/worker/index.js",
+			"import": "./dist/opfs/worker/index.mjs"
+		}
+	},
+	"files": ["dist"],
+	"config": {
+		"commitizen": {
+			"path": "./node_modules/@ryansonshine/cz-conventional-changelog"
+		}
+	},
+	"release-it": {
+		"git": {
+			"commitMessage": "chore(release): v${version}"
+		},
+		"github": {
+			"release": true
+		},
+		"npm": {
+			"publish": false
+		}
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@ryansonshine/commitizen": "4.2.8",
+		"@ryansonshine/cz-conventional-changelog": "3.3.4",
+		"@storybook/addon-actions": "^8.5.3",
+		"@storybook/addon-essentials": "8.5.3",
+		"@storybook/addon-interactions": "8.5.3",
+		"@storybook/addon-links": "8.5.3",
+		"@storybook/addon-webpack5-compiler-swc": "2.0.0",
+		"@storybook/blocks": "8.5.3",
+		"@storybook/react": "8.5.3",
+		"@storybook/react-webpack5": "8.5.3",
+		"@storybook/test": "8.5.3",
+		"@testing-library/jest-dom": "6.6.3",
+		"@testing-library/react": "16.2.0",
+		"@types/node": "22.13.1",
+		"@types/react": "19.0.8",
+		"@types/react-dom": "19.0.3",
+		"@types/react-test-renderer": "19.0.0",
+		"@vitest/coverage-v8": "3.0.5",
+		"concurrently": "9.1.2",
+		"jsdom": "26.0.0",
+		"lefthook": "1.10.10",
+		"prop-types": "15.8.1",
+		"react": "19.0.0",
+		"react-dom": "19.0.0",
+		"react-test-renderer": "19.0.0",
+		"release-it": "18.1.2",
+		"storybook": "8.5.3",
+		"ts-node": "10.9.2",
+		"tsconfig-paths": "4.2.0",
+		"tsup": "8.3.6",
+		"tsx": "4.19.2",
+		"typescript": "5.7.3",
+		"vitest": "3.0.5"
+	},
+	"peerDependencies": {
+		"react": ">=17",
+		"react-dom": ">=17"
+	},
+	"pnpm": {
+		"overrides": {
+			"micromatch@<4.0.8": ">=4.0.8"
+		},
+		"onlyBuiltDependencies": ["lefthook"]
+	},
+	"dependencies": {
+		"ignore": "^7.0.3"
+	}
 }

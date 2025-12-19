@@ -170,3 +170,112 @@ export class NotSupportedError extends UseFsError {
 		this.name = "NotSupportedError";
 	}
 }
+
+// ============================================================================
+// OPFS (Origin Private File System) Types
+// ============================================================================
+
+/** Branded type for OPFS paths - prevents mixing with user filesystem paths */
+export type OpfsPath = string & { readonly __brand: "OpfsPath" };
+
+/** Helper to create an OpfsPath from a string */
+export const toOpfsPath = (path: string): OpfsPath => {
+	// Normalize path: ensure leading slash, no trailing slash (except root)
+	let normalized = path.startsWith("/") ? path : `/${path}`;
+	if (normalized.length > 1 && normalized.endsWith("/")) {
+		normalized = normalized.slice(0, -1);
+	}
+	return normalized as OpfsPath;
+};
+
+/** OPFS file entry metadata */
+export interface OpfsEntry {
+	path: OpfsPath;
+	lastModified: number;
+	size: number;
+}
+
+/** OPFS change events - discriminated union for type-safe handling */
+export type OpfsChange =
+	| { type: "added"; entry: OpfsEntry }
+	| { type: "modified"; entry: OpfsEntry; previousLastModified: number }
+	| { type: "deleted"; path: OpfsPath };
+
+/** BroadcastChannel message format for cross-tab sync */
+export interface OpfsBroadcastMessage {
+	type: "changes";
+	changes: OpfsChange[];
+	source: string; // Tab identifier
+}
+
+/** Hook configuration options */
+export interface UseOpfsOptions {
+	/** Root path for all operations. Default: '/' */
+	basePath?: OpfsPath;
+	/** Scan directory on mount. Default: false (lazy) */
+	scan?: boolean;
+	/** Enable cross-tab sync via BroadcastChannel. Default: true */
+	broadcast?: boolean;
+	/** Channel name for broadcasts. Default: 'use-opfs' */
+	channelName?: string;
+	/** Called when files change (including from other tabs) */
+	onChange?: (changes: OpfsChange[]) => void;
+	/** Called on errors */
+	onError?: (error: Error) => void;
+}
+
+/** Hook return value */
+export interface UseOpfsResult {
+	/** Current file entries (metadata only, not content) */
+	files: Map<OpfsPath, OpfsEntry>;
+	/** True while actively scanning directories */
+	isScanning: boolean;
+	/** True if OPFS is supported */
+	isSupported: boolean;
+	/** True if connected to broadcast channel */
+	isBroadcasting: boolean;
+
+	/** Scan the basePath directory and populate files state */
+	scan: () => Promise<void>;
+	/** Clear all state */
+	clear: () => void;
+
+	/** Read file content */
+	readFile: (path: OpfsPath) => Promise<string>;
+	/** Read file as ArrayBuffer (for binary data) */
+	readFileBuffer: (path: OpfsPath) => Promise<ArrayBuffer>;
+	/** Write content to a file (creates if doesn't exist) */
+	writeFile: (path: OpfsPath, content: string | ArrayBuffer) => Promise<void>;
+	/** Delete a file */
+	deleteFile: (path: OpfsPath) => Promise<void>;
+	/** Create a directory (recursive) */
+	createDirectory: (path: OpfsPath) => Promise<void>;
+	/** Delete a directory (recursive) */
+	deleteDirectory: (path: OpfsPath) => Promise<void>;
+	/** Check if a file or directory exists */
+	exists: (path: OpfsPath) => Promise<boolean>;
+}
+
+/** Thrown when OPFS is not supported */
+export class OpfsNotSupportedError extends UseFsError {
+	constructor() {
+		super("OPFS is not supported in this browser", "OPFS_NOT_SUPPORTED");
+		this.name = "OpfsNotSupportedError";
+	}
+}
+
+/** Thrown when an OPFS file is not found */
+export class OpfsFileNotFoundError extends UseFsError {
+	constructor(path: OpfsPath) {
+		super(`OPFS file not found: ${path}`, "OPFS_FILE_NOT_FOUND");
+		this.name = "OpfsFileNotFoundError";
+	}
+}
+
+/** Thrown when an OPFS directory is not found */
+export class OpfsDirectoryNotFoundError extends UseFsError {
+	constructor(path: OpfsPath) {
+		super(`OPFS directory not found: ${path}`, "OPFS_DIRECTORY_NOT_FOUND");
+		this.name = "OpfsDirectoryNotFoundError";
+	}
+}
