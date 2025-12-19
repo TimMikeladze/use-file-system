@@ -17,7 +17,7 @@
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"react-install-command": "^1.1.2",
-		"use-fs": "1.0.0"
+		"use-fs": "file:.."
 	},
 	"devDependencies": {
 		"@iconify/react": "^5.2.0",
