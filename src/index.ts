@@ -37,6 +37,16 @@ export {
 // Scanner utilities (for advanced use cases)
 export { collectEntries, detectChanges, scanDirectory } from "./scanner";
 
+// Cross-tab sync utilities
+export { FsBroadcast } from "./broadcast";
+export type { FsBroadcastMessage } from "./broadcast";
+export {
+	storeHandle,
+	retrieveHandle,
+	removeHandle,
+	verifyPermission,
+} from "./handle-storage";
+
 // ============================================================================
 // OPFS (Origin Private File System)
 // ============================================================================

@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FsBroadcast } from "./broadcast";
 import { defaultFilters, initializeFilters } from "./filters";
+import {
+	removeHandle,
+	retrieveHandle,
+	storeHandle,
+	verifyPermission,
+} from "./handle-storage";
 import { collectEntries, detectChanges, scanDirectory } from "./scanner";
 import type {
+	FileChange,
 	FileEntry,
 	FilePath,
 	Filter,
@@ -32,12 +40,20 @@ const checkSupport = (): boolean => {
  * React hook for file system access with automatic change detection
  */
 export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
-	const { pollInterval = DEFAULT_POLL_INTERVAL, onError, onChange } = options;
+	const {
+		pollInterval = DEFAULT_POLL_INTERVAL,
+		onError,
+		onChange,
+		broadcast: enableBroadcast = false,
+		channelName = "use-fs",
+		storageKey = "default",
+	} = options;
 
 	// State
 	const [files, setFiles] = useState<Map<FilePath, FileEntry>>(new Map());
 	const [isScanning, setIsScanning] = useState(false);
 	const [isPolling, setIsPolling] = useState(false);
+	const [isBroadcasting, setIsBroadcasting] = useState(false);
 
 	// Refs for mutable state that shouldn't trigger re-renders
 	const rootHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
@@ -46,6 +62,7 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 	const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const filesRef = useRef<Map<FilePath, FileEntry>>(new Map());
 	const isScanningRef = useRef(false);
+	const broadcastRef = useRef<FsBroadcast | null>(null);
 
 	// Keep filesRef in sync with state
 	useEffect(() => {
@@ -53,6 +70,80 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 	}, [files]);
 
 	const isSupported = checkSupport();
+
+	// Initialize broadcast channel if enabled
+	useEffect(() => {
+		if (enableBroadcast && !broadcastRef.current) {
+			broadcastRef.current = new FsBroadcast(channelName);
+			setIsBroadcasting(broadcastRef.current.isConnected);
+
+			// Subscribe to messages from other tabs
+			const unsubscribe = broadcastRef.current.subscribe((message) => {
+				if (message.type === "changes" && message.changes) {
+					// Optimistic update: apply changes from other tabs directly
+					applyRemoteChanges(message.changes);
+				} else if (message.type === "handle-available") {
+					// Another tab stored a handle, we could auto-connect
+					// For now, just let the app call connectShared() if desired
+				}
+			});
+
+			return () => {
+				unsubscribe();
+				broadcastRef.current?.close();
+				broadcastRef.current = null;
+				setIsBroadcasting(false);
+			};
+		}
+	}, [enableBroadcast, channelName]);
+
+	/**
+	 * Apply changes received from another tab (optimistic update)
+	 */
+	const applyRemoteChanges = useCallback(
+		(changes: FileChange[]) => {
+			const newFiles = new Map(filesRef.current);
+			let hasChanges = false;
+
+			for (const change of changes) {
+				if (change.type === "added" || change.type === "modified") {
+					// We don't have the file handle from the remote tab,
+					// but we can update the metadata. The handle will be
+					// populated on next scan or when reading the file.
+					const existing = newFiles.get(change.entry.path);
+					if (existing) {
+						// Update metadata but keep our local handle
+						newFiles.set(change.entry.path, {
+							...existing,
+							lastModified: change.entry.lastModified,
+							size: change.entry.size,
+						});
+					}
+					// If we don't have the file, we'll pick it up on next scan
+					hasChanges = true;
+				} else if (change.type === "deleted") {
+					if (newFiles.has(change.path)) {
+						newFiles.delete(change.path);
+						hasChanges = true;
+					}
+				}
+			}
+
+			if (hasChanges) {
+				filesRef.current = newFiles;
+				setFiles(newFiles);
+				onChange?.(changes);
+			}
+		},
+		[onChange],
+	);
+
+	/**
+	 * Broadcast changes to other tabs
+	 */
+	const broadcastChanges = useCallback((changes: FileChange[]) => {
+		broadcastRef.current?.broadcastChanges(changes);
+	}, []);
 
 	/**
 	 * Perform a single scan cycle
@@ -87,6 +178,9 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 
 				// Notify via callback
 				onChange?.(changes);
+
+				// Broadcast to other tabs (don't broadcast scan results,
+				// only explicit mutations, to avoid duplicate notifications)
 			}
 		} catch (error) {
 			onError?.(error instanceof Error ? error : new Error(String(error)));
@@ -127,15 +221,10 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 	}, []);
 
 	/**
-	 * Open directory picker and initialize watching
+	 * Initialize the hook with a directory handle
 	 */
-	const selectDirectory = useCallback(async () => {
-		if (!(isSupported && window.showDirectoryPicker)) {
-			throw new NotSupportedError();
-		}
-
-		try {
-			const handle = await window.showDirectoryPicker();
+	const initializeWithHandle = useCallback(
+		async (handle: FileSystemDirectoryHandle) => {
 			const path = toFilePath(handle.name);
 
 			// Stop any existing polling
@@ -158,6 +247,28 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 
 			// Start polling
 			startPolling();
+		},
+		[options.filters, scan, startPolling, stopPolling],
+	);
+
+	/**
+	 * Open directory picker and initialize watching
+	 */
+	const selectDirectory = useCallback(async () => {
+		if (!(isSupported && window.showDirectoryPicker)) {
+			throw new NotSupportedError();
+		}
+
+		try {
+			const handle = await window.showDirectoryPicker();
+
+			await initializeWithHandle(handle);
+
+			// Store handle in IndexedDB for cross-tab access
+			if (enableBroadcast) {
+				await storeHandle(handle, storageKey);
+				broadcastRef.current?.broadcastHandleAvailable();
+			}
 		} catch (error) {
 			// User cancelled picker or other error
 			if (error instanceof Error && error.name === "AbortError") {
@@ -165,19 +276,53 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 			}
 			throw error;
 		}
-	}, [isSupported, options.filters, scan, startPolling, stopPolling]);
+	}, [isSupported, initializeWithHandle, enableBroadcast, storageKey]);
+
+	/**
+	 * Try to connect to a shared directory handle from IndexedDB
+	 * Returns true if successfully connected, false otherwise
+	 */
+	const connectShared = useCallback(async (): Promise<boolean> => {
+		if (!enableBroadcast) {
+			return false;
+		}
+
+		try {
+			const handle = await retrieveHandle(storageKey);
+			if (!handle) {
+				return false;
+			}
+
+			// Verify we have permission (may prompt user)
+			const hasPermission = await verifyPermission(handle);
+			if (!hasPermission) {
+				return false;
+			}
+
+			await initializeWithHandle(handle);
+			return true;
+		} catch (error) {
+			onError?.(error instanceof Error ? error : new Error(String(error)));
+			return false;
+		}
+	}, [enableBroadcast, storageKey, initializeWithHandle, onError]);
 
 	/**
 	 * Clear all state and stop watching
 	 */
-	const clear = useCallback(() => {
+	const clear = useCallback(async () => {
 		stopPolling();
 		rootHandleRef.current = null;
 		rootPathRef.current = null;
 		filterRef.current = null;
 		filesRef.current = new Map();
 		setFiles(new Map());
-	}, [stopPolling]);
+
+		// Remove stored handle if broadcast is enabled
+		if (enableBroadcast) {
+			await removeHandle(storageKey);
+		}
+	}, [stopPolling, enableBroadcast, storageKey]);
 
 	/**
 	 * Read file content on-demand (lazy loading)
@@ -199,9 +344,9 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 		async (
 			path: FilePath,
 			content: string,
-			options: WriteFileOptions = {},
+			writeOptions: WriteFileOptions = {},
 		): Promise<void> => {
-			const { truncate = true } = options;
+			const { truncate = true } = writeOptions;
 
 			const entry = filesRef.current.get(path);
 			if (!entry) {
@@ -227,19 +372,22 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 				filesRef.current.set(path, updatedEntry);
 				setFiles(new Map(filesRef.current));
 
-				onChange?.([
+				const changes: FileChange[] = [
 					{
 						type: "modified",
 						entry: updatedEntry,
 						previousLastModified: entry.lastModified,
 					},
-				]);
+				];
+
+				onChange?.(changes);
+				broadcastChanges(changes);
 			} catch (error) {
 				await writable.abort();
 				throw error;
 			}
 		},
-		[onChange],
+		[onChange, broadcastChanges],
 	);
 
 	/**
@@ -275,9 +423,11 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 			filesRef.current.delete(path);
 			setFiles(new Map(filesRef.current));
 
-			onChange?.([{ type: "deleted", path }]);
+			const changes: FileChange[] = [{ type: "deleted", path }];
+			onChange?.(changes);
+			broadcastChanges(changes);
 		},
-		[onChange],
+		[onChange, broadcastChanges],
 	);
 
 	/**
@@ -325,11 +475,13 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 			filesRef.current.set(path, entry);
 			setFiles(new Map(filesRef.current));
 
-			onChange?.([{ type: "added", entry }]);
+			const changes: FileChange[] = [{ type: "added", entry }];
+			onChange?.(changes);
+			broadcastChanges(changes);
 
 			return entry;
 		},
-		[onChange],
+		[onChange, broadcastChanges],
 	);
 
 	// Cleanup on unmount
@@ -346,7 +498,9 @@ export function useFileSystem(options: UseFsOptions = {}): UseFsResult {
 		isScanning,
 		isPolling,
 		isSupported,
+		isBroadcasting,
 		selectDirectory,
+		connectShared,
 		clear,
 		startPolling,
 		stopPolling,

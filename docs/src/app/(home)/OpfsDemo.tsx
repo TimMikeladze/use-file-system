@@ -39,7 +39,9 @@ const OpfsDemo = () => {
 	});
 
 	const handleCreateFile = async () => {
-		if (!newFileName.trim()) return;
+		if (!newFileName.trim()) {
+			return;
+		}
 		const path = toOpfsPath(`/${newFileName.trim()}`);
 		await writeFile(path, newFileContent);
 		setNewFileName("");
@@ -54,7 +56,9 @@ const OpfsDemo = () => {
 	};
 
 	const handleSaveFile = async () => {
-		if (!selectedFile) return;
+		if (!selectedFile) {
+			return;
+		}
 		await writeFile(selectedFile.path, editContent);
 		setSelectedFile({ ...selectedFile, content: editContent });
 		await scan();
@@ -62,7 +66,9 @@ const OpfsDemo = () => {
 
 	const handleDeleteFile = async (path: OpfsPath) => {
 		await deleteFile(path);
-		if (selectedFile?.path === path) setSelectedFile(null);
+		if (selectedFile?.path === path) {
+			setSelectedFile(null);
+		}
 		await scan();
 	};
 
@@ -72,8 +78,12 @@ const OpfsDemo = () => {
 	};
 
 	const formatSize = (bytes: number) => {
-		if (bytes < 1024) return `${bytes}B`;
-		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+		if (bytes < 1024) {
+			return `${bytes}B`;
+		}
+		if (bytes < 1024 * 1024) {
+			return `${(bytes / 1024).toFixed(1)}KB`;
+		}
 		return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 	};
 
@@ -96,14 +106,18 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 			{/* Header with toggle */}
 			<div className="flex items-center justify-between rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900">
 				<div className="flex items-center gap-4 text-[11px]">
-					<span className="font-semibold text-zinc-900 dark:text-white">Origin Private File System</span>
-					<span className="font-medium text-zinc-600 dark:text-zinc-300">No prompts • Persistent • Cross-tab sync</span>
+					<span className="font-semibold text-zinc-900 dark:text-white">
+						Origin Private File System
+					</span>
+					<span className="font-medium text-zinc-600 dark:text-zinc-300">
+						No prompts • Persistent • Cross-tab sync
+					</span>
 					<span className="text-zinc-500 dark:text-zinc-400">All browsers</span>
 				</div>
 				<button
 					type="button"
 					onClick={() => setShowCode(!showCode)}
-					className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+					className="font-medium text-[11px] text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
 				>
 					{showCode ? "Hide code" : "Show code"}
 				</button>
@@ -115,21 +129,61 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 					{/* README */}
 					<div className="overflow-auto rounded-md border border-zinc-200 bg-white p-3 text-left dark:border-zinc-700 dark:bg-zinc-900">
 						<div className="prose prose-zinc prose-sm dark:prose-invert max-w-none text-[11px]">
-							<p className="font-medium text-zinc-800 dark:text-zinc-200 !mt-0 !mb-2">
-								Sandboxed filesystem for web apps - no permission prompts required.
+							<p className="!mt-0 !mb-2 font-medium text-zinc-800 dark:text-zinc-200">
+								Sandboxed filesystem for web apps - no permission prompts
+								required.
 							</p>
-							<h4 className="!text-[11px] !font-bold !mt-2 !mb-1 text-zinc-900 dark:text-white">Features</h4>
-							<ul className="!my-0 !pl-4 space-y-0.5 text-zinc-600 dark:text-zinc-400 list-disc">
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">writeFile(path, content)</code> - Auto-creates parent dirs</li>
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">readFile(path)</code> - Read file as string</li>
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">deleteFile(path)</code> - Remove files</li>
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">scan()</code> - Refresh file list</li>
+							<h4 className="!text-[11px] !font-bold !mt-2 !mb-1 text-zinc-900 dark:text-white">
+								Features
+							</h4>
+							<ul className="!my-0 !pl-4 list-disc space-y-0.5 text-zinc-600 dark:text-zinc-400">
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										writeFile(path, content)
+									</code>{" "}
+									- Auto-creates parent dirs
+								</li>
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										readFile(path)
+									</code>{" "}
+									- Read file as string
+								</li>
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										deleteFile(path)
+									</code>{" "}
+									- Remove files
+								</li>
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										scan()
+									</code>{" "}
+									- Refresh file list
+								</li>
 							</ul>
-							<h4 className="!text-[11px] !font-bold !mt-2 !mb-1 text-zinc-900 dark:text-white">Options</h4>
-							<ul className="!my-0 !pl-4 space-y-0.5 text-zinc-600 dark:text-zinc-400 list-disc">
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">scan: true</code> - Auto-scan on mount</li>
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">broadcast: true</code> - Cross-tab sync</li>
-								<li><code className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1 rounded">basePath</code> - Root directory</li>
+							<h4 className="!text-[11px] !font-bold !mt-2 !mb-1 text-zinc-900 dark:text-white">
+								Options
+							</h4>
+							<ul className="!my-0 !pl-4 list-disc space-y-0.5 text-zinc-600 dark:text-zinc-400">
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										scan: true
+									</code>{" "}
+									- Auto-scan on mount
+								</li>
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										broadcast: true
+									</code>{" "}
+									- Cross-tab sync
+								</li>
+								<li>
+									<code className="rounded bg-zinc-100 px-1 text-[10px] dark:bg-zinc-800">
+										basePath
+									</code>{" "}
+									- Root directory
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -137,7 +191,10 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 					<div className="overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-700">
 						<Highlight theme={themes.oneDark} code={codeExample} language="tsx">
 							{({ className, style, tokens, getLineProps, getTokenProps }) => (
-								<pre className={`${className} p-2 text-[11px] leading-relaxed`} style={style}>
+								<pre
+									className={`${className} p-2 text-[11px] leading-relaxed`}
+									style={style}
+								>
 									{tokens.map((line, i) => (
 										<div key={i} {...getLineProps({ line })}>
 											{line.map((token, key) => (
@@ -163,7 +220,7 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 								type="button"
 								onClick={() => scan()}
 								disabled={isScanning}
-								className="inline-flex items-center rounded bg-zinc-900 px-2 py-1 text-[11px] font-semibold text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+								className="inline-flex items-center rounded bg-zinc-900 px-2 py-1 font-semibold text-[11px] text-white hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
 							>
 								{isScanning ? "..." : "Scan"}
 							</button>
@@ -171,14 +228,16 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 								type="button"
 								onClick={handleClearAll}
 								disabled={files.size === 0}
-								className="inline-flex items-center rounded border border-zinc-300 bg-white px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+								className="inline-flex items-center rounded border border-zinc-300 bg-white px-2 py-1 font-medium text-[11px] text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
 							>
 								Clear
 							</button>
 						</div>
-						<div className="flex items-center gap-2 text-[11px] font-medium text-zinc-600 dark:text-zinc-300">
+						<div className="flex items-center gap-2 font-medium text-[11px] text-zinc-600 dark:text-zinc-300">
 							<span>{files.size} files</span>
-							<div className={`h-2 w-2 rounded-full ${isBroadcasting ? "animate-pulse bg-blue-500" : "bg-zinc-400"}`} />
+							<div
+								className={`h-2 w-2 rounded-full ${isBroadcasting ? "animate-pulse bg-blue-500" : "bg-zinc-400"}`}
+							/>
 						</div>
 					</div>
 
@@ -189,20 +248,20 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 							placeholder="filename.txt"
 							value={newFileName}
 							onChange={(e) => setNewFileName(e.target.value)}
-							className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder:text-zinc-500"
+							className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 font-medium text-[11px] text-zinc-800 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder:text-zinc-500"
 						/>
 						<input
 							type="text"
 							placeholder="content"
 							value={newFileContent}
 							onChange={(e) => setNewFileContent(e.target.value)}
-							className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 text-[11px] font-medium text-zinc-800 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder:text-zinc-500"
+							className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1 font-medium text-[11px] text-zinc-800 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:placeholder:text-zinc-500"
 						/>
 						<button
 							type="button"
 							onClick={handleCreateFile}
 							disabled={!newFileName.trim()}
-							className="rounded bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+							className="rounded bg-emerald-600 px-2 py-1 font-semibold text-[11px] text-white hover:bg-emerald-700 disabled:opacity-50"
 						>
 							+
 						</button>
@@ -210,13 +269,13 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 
 					{/* File List */}
 					{!isSupported && (
-						<div className="m-2 rounded border border-amber-400 bg-amber-50 p-2 text-[11px] font-medium text-amber-800 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+						<div className="m-2 rounded border border-amber-400 bg-amber-50 p-2 font-medium text-[11px] text-amber-800 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
 							OPFS not supported in this browser.
 						</div>
 					)}
 					<div className="h-[200px] overflow-y-auto p-1">
 						{files.size === 0 ? (
-							<div className="flex h-full items-center justify-center text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+							<div className="flex h-full items-center justify-center font-medium text-[11px] text-zinc-500 dark:text-zinc-400">
 								Create a file above
 							</div>
 						) : (
@@ -232,19 +291,33 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 									<button
 										type="button"
 										onClick={() => handleSelectFile(path)}
-										className="flex flex-1 items-center gap-2 text-left text-[11px] font-medium"
+										className="flex flex-1 items-center gap-2 text-left font-medium text-[11px]"
 									>
-										<span className="text-zinc-700 dark:text-zinc-300">{path}</span>
-										<span className="text-zinc-500 dark:text-zinc-400">{formatSize(entry.size)}</span>
+										<span className="text-zinc-700 dark:text-zinc-300">
+											{path}
+										</span>
+										<span className="text-zinc-500 dark:text-zinc-400">
+											{formatSize(entry.size)}
+										</span>
 									</button>
 									<button
 										type="button"
 										onClick={() => handleDeleteFile(path)}
 										className="rounded p-0.5 text-red-500 opacity-0 hover:bg-red-50 group-hover:opacity-100 dark:text-red-400 dark:hover:bg-red-900/30"
 									>
-										<svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<svg
+											className="h-3 w-3"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
 											<title>Delete</title>
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M6 18L18 6M6 6l12 12"
+											/>
 										</svg>
 									</button>
 								</div>
@@ -256,14 +329,14 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 				{/* Editor */}
 				<div className="flex flex-col overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
 					<div className="flex items-center justify-between border-zinc-200 border-b px-2 py-1.5 dark:border-zinc-700">
-						<span className="truncate text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">
+						<span className="truncate font-semibold text-[11px] text-zinc-800 dark:text-zinc-200">
 							{selectedFile?.path || "No file selected"}
 						</span>
 						{selectedFile && editContent !== selectedFile.content && (
 							<button
 								type="button"
 								onClick={handleSaveFile}
-								className="rounded bg-emerald-500 px-2 py-0.5 text-[11px] font-semibold text-white hover:bg-emerald-600"
+								className="rounded bg-emerald-500 px-2 py-0.5 font-semibold text-[11px] text-white hover:bg-emerald-600"
 							>
 								Save
 							</button>
@@ -287,7 +360,7 @@ const content = await readFile(toOpfsPath('/notes/todo.txt'));`;
 			</div>
 
 			{/* Tip */}
-			<div className="flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-[11px] font-medium dark:border-blue-600 dark:bg-blue-900/30">
+			<div className="flex items-center gap-2 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 font-medium text-[11px] dark:border-blue-600 dark:bg-blue-900/30">
 				<div className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
 				<span className="text-blue-800 dark:text-blue-300">
 					Open in multiple tabs to see cross-tab sync via BroadcastChannel

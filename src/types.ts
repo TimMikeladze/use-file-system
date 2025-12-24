@@ -89,6 +89,12 @@ export interface UseFsOptions {
 	onError?: (error: Error) => void;
 	/** Callback when files change */
 	onChange?: (changes: FileChange[]) => void;
+	/** Enable cross-tab sync via BroadcastChannel. Default: false */
+	broadcast?: boolean;
+	/** Channel name for broadcasts. Default: 'use-fs' */
+	channelName?: string;
+	/** IndexedDB key for storing the directory handle. Default: 'default' */
+	storageKey?: string;
 }
 
 /** Hook return value */
@@ -101,9 +107,13 @@ export interface UseFsResult {
 	isPolling: boolean;
 	/** True if File System Access API is supported */
 	isSupported: boolean;
+	/** True if connected to broadcast channel (when broadcast option enabled) */
+	isBroadcasting: boolean;
 
 	/** Open directory picker and start watching */
 	selectDirectory: () => Promise<void>;
+	/** Try to connect to a shared directory handle from IndexedDB (no picker prompt) */
+	connectShared: () => Promise<boolean>;
 	/** Stop watching and clear all state */
 	clear: () => void;
 	/** Resume polling (after stopPolling was called) */
