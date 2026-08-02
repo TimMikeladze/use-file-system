@@ -9,7 +9,7 @@
 		"postinstall": "fumadocs-mdx",
 		"predev": "pnpm run build:package",
 		"prebuild": "pnpm run build:package",
-		"build:package": "pnpm --dir .. install --frozen-lockfile && pnpm --dir .. build"
+		"build:package": "pnpm --dir .. build"
 	},
 	"dependencies": {
 		"fumadocs-core": "15.0.6",
@@ -17,10 +17,10 @@
 		"fumadocs-ui": "15.0.6",
 		"next": "15.1.6",
 		"prism-react-renderer": "^2.4.1",
-		"react": "^19.0.0",
-		"react-dom": "^19.0.0",
+		"react": "19.1.0",
+		"react-dom": "19.1.0",
 		"react-install-command": "^1.1.2",
-		"use-fs": "link:.."
+		"use-fs": "workspace:*"
 	},
 	"devDependencies": {
 		"@iconify/react": "^5.2.0",

@@ -59,8 +59,7 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Install example dependencies
-        run: cd docs && pnpm install --frozen-lockfile
-
+      # The docs site is a workspace member, so the install above already
+      # covers it.
       - name: Build example
-        run: cd docs && pnpm build
+        run: pnpm --filter docs build

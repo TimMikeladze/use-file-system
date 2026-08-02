@@ -1,3 +1,10 @@
+# The docs site is a workspace member so it shares a single install with the
+# package it demos. That is what keeps React deduplicated: a separate install
+# under docs/ would give the linked package its own React copy and every hook
+# call inside `use-fs` would render against a null dispatcher.
+packages:
+  - docs
+
 # pnpm >= 11 no longer reads the "pnpm" field in package.json; these settings
 # live here instead. pnpm 10.16+ reads them from here too, so both work.
 overrides:
@@ -13,8 +20,10 @@ overrides:
 allowBuilds:
   "@biomejs/biome": false
   "@swc/core": false
+  "@tailwindcss/oxide": false
   esbuild: false
   lefthook: true
+  sharp: false
 
 onlyBuiltDependencies:
   - lefthook
@@ -22,4 +31,6 @@ onlyBuiltDependencies:
 ignoredBuiltDependencies:
   - "@biomejs/biome"
   - "@swc/core"
+  - "@tailwindcss/oxide"
   - esbuild
+  - sharp
