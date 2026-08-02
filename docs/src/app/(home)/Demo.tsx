@@ -35,7 +35,6 @@ const App = () => {
 		files,
 		isBrowserSupported,
 		writeFile,
-		setFiles,
 		startPolling,
 		stopPolling,
 		isPolling,
@@ -182,21 +181,13 @@ const App = () => {
 					throw new Error("Selected file no longer exists");
 				}
 
-				await writeFile(selectedFile.path, editableContent, { truncate: true });
+				await writeFile(selectedFile.path, editableContent);
 				setSelectedFile((prev) => ({
 					...prev,
 					previousContent: prev.content,
 					content: editableContent,
 				}));
 				setHasUnsavedChanges(false);
-
-				// Instead of using setFiles, we can force a refresh by clearing and resetting the selected file
-				const content = files.get(selectedFile.path) || null;
-				setSelectedFile({
-					path: selectedFile.path,
-					content,
-					previousContent: null,
-				});
 			} catch (error: unknown) {
 				console.error("Error saving file:", error);
 				if (error instanceof Error) {
