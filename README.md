@@ -203,12 +203,19 @@ Options are read at the moment they are used, so inline callbacks and filter arr
 
 ## 📚 Contributing
 
+The demo site depends on the package through `"use-fs": "link:.."`, so it always
+runs your local build - there is no `pnpm link` step and no published release
+involved. `cd docs && pnpm dev` builds the package first, so a fresh clone works
+straight away.
+
 1. Navigate to the `docs` directory
 2. Run `pnpm install` to install the dependencies
 3. Run `pnpm dev` to start the development server
-4. Navigate to `http://localhost:3000` to view the demo.
-5. Modify the `Demo.tsx` file to make your changes.
+4. Navigate to `http://localhost:3000` to view the demo
+5. Modify the `Demo.tsx` file to make your changes
 
-If you're making changes to the `use-fs` package, you can run `pnpm build` to build the package and then run `pnpm link use-fs` to link the package to the `docs` directory for local development and testing.
+When changing the package itself, run `pnpm dev` at the repository root in a
+second terminal. It rebuilds `dist` on every save and runs the tests in watch
+mode, and the demo picks the rebuild up on its next refresh.
 
 Run `pnpm test` for the test suite, `pnpm typecheck` for types and `pnpm lint` for formatting and lint.
