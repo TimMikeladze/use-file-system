@@ -1,0 +1,7 @@
+# pnpm >= 11 no longer reads the "pnpm" field in package.json; these settings
+# live here instead. pnpm 10.16+ reads them from here too, so both work.
+overrides:
+  micromatch@<4.0.8: '>=4.0.8'
+
+onlyBuiltDependencies:
+  - lefthook

@@ -1,0 +1,6 @@
+# Marks docs as its own pnpm project so the settings file at the repository
+# root does not capture this install.
+ignoredBuiltDependencies:
+  - "@tailwindcss/oxide"
+  - esbuild
+  - sharp
