@@ -3,13 +3,23 @@
 overrides:
   micromatch@<4.0.8: '>=4.0.8'
 
-# Every dependency that ships an install script has to be accounted for or
-# pnpm 11 fails the install with ERR_PNPM_IGNORED_BUILDS. None of these need
-# theirs: each ships its native binary as a platform-specific optional
-# dependency, and `lefthook install` (the root `prepare` script) works without
-# lefthook's.
+# Dependencies that ship an install script have to be accounted for or pnpm 11
+# fails the install with ERR_PNPM_IGNORED_BUILDS. pnpm 11 spells this
+# `allowBuilds`; pnpm 10 spells it onlyBuiltDependencies/ignoredBuiltDependencies,
+# so both are listed and either version installs without prompting.
+#
+# Only lefthook needs its script, to sync the git hooks. The rest ship their
+# native binaries as platform-specific optional dependencies.
+allowBuilds:
+  "@biomejs/biome": false
+  "@swc/core": false
+  esbuild: false
+  lefthook: true
+
+onlyBuiltDependencies:
+  - lefthook
+
 ignoredBuiltDependencies:
   - "@biomejs/biome"
   - "@swc/core"
   - esbuild
-  - lefthook
