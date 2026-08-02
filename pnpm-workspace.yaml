@@ -3,5 +3,13 @@
 overrides:
   micromatch@<4.0.8: '>=4.0.8'
 
-onlyBuiltDependencies:
+# Every dependency that ships an install script has to be accounted for or
+# pnpm 11 fails the install with ERR_PNPM_IGNORED_BUILDS. None of these need
+# theirs: each ships its native binary as a platform-specific optional
+# dependency, and `lefthook install` (the root `prepare` script) works without
+# lefthook's.
+ignoredBuiltDependencies:
+  - "@biomejs/biome"
+  - "@swc/core"
+  - esbuild
   - lefthook
