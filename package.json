@@ -27,6 +27,7 @@
 		"type": "git",
 		"url": "git@github.com:TimMikeladze/use-fs.git"
 	},
+	"packageManager": "pnpm@10.33.0",
 	"scripts": {
 		"dev": "concurrently \"pnpm build --watch\" \"pnpm test\" ",
 		"build": "tsup",
@@ -40,7 +41,7 @@
 		"storybook:build": "storybook build",
 		"release": "pnpm build && pnpm release-it",
 		"link:self": "pnpm link --global",
-		"prepare": "lefthook install"
+		"prepare": "lefthook install || exit 0"
 	},
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -68,6 +69,11 @@
 	},
 	"engines": {
 		"node": ">=18.0.0"
+	},
+	"pnpm": {
+		"overrides": {
+			"micromatch@<4.0.8": ">=4.0.8"
+		}
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

@@ -6,7 +6,16 @@ packages:
   - docs
 
 # pnpm >= 11 no longer reads the "pnpm" field in package.json; these settings
-# live here instead. pnpm 10.16+ reads them from here too, so both work.
+# live here instead. pnpm 10.16+ reads them from here too.
+#
+# `overrides` is deliberately declared BOTH here and in package.json's "pnpm"
+# field, and the two must be kept identical. The lockfile records the override,
+# so any pnpm that cannot see it fails a frozen install with
+# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH - and pnpm 9 reads only package.json while
+# pnpm 11 reads only this file. Vercel picks its pnpm from the lockfile format
+# (`lockfileVersion: 9.0` -> pnpm 9) and ignores `packageManager` unless the
+# project sets ENABLE_EXPERIMENTAL_COREPACK=1, so the deploy really does run
+# pnpm 9 even though everything else here is pinned to pnpm 10.
 overrides:
   micromatch@<4.0.8: '>=4.0.8'
 

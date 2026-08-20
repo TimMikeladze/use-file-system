@@ -17,17 +17,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      # No `version` input: action-setup reads the `packageManager` field in
+      # package.json, so CI, Vercel and a local checkout all run the same pnpm.
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: latest
           run_install: false
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          # pnpm 11 (what `version: latest` resolves to) requires Node >= 22.13
-          # and imports `node:sqlite`, which does not exist on Node 20.
           node-version: 22
           cache: 'pnpm'
 
