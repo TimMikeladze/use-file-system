@@ -4,7 +4,7 @@
 
 @import "fumadocs-ui/css/black.css";
 
-@source '../../node_modules/fumadocs-ui/dist/**/*.js';
+@source "../../node_modules/fumadocs-ui/dist/**/*.js";
 
 body {
 	background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 0h1v20h-1V0zm0 0v1H0V0h19z' fill='rgba(0, 0, 0, 0.02)'/%3E%3C/svg%3E");

@@ -1,6 +1,6 @@
+import { notFound } from "next/navigation";
 import { metadataImage } from "@/lib/metadata";
 import { source } from "@/lib/source";
-import { notFound } from "next/navigation";
 import HomePage from "./page.client";
 
 export async function generateMetadata(props: {

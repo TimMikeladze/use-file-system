@@ -6,7 +6,7 @@ import { walkDirectory } from "./walk";
 /** Default number of files read concurrently. */
 export const DEFAULT_BATCH_SIZE = 50;
 
-export type ScanParams = {
+export interface ScanParams {
 	/** Watched root directories, keyed by the path they are exposed under. */
 	directories: ReadonlyMap<string, FileSystemDirectoryHandle>;
 	/** Filters to apply, already instantiated for this scan. */
@@ -19,9 +19,9 @@ export type ScanParams = {
 	concurrency?: number;
 	/** Called for every non-fatal error encountered during the scan. */
 	onError?: (error: Error) => void;
-};
+}
 
-export type ScanResult = {
+export interface ScanResult {
 	/** The complete new state of the watched tree. */
 	records: Map<string, FileRecord>;
 	/** Files seen for the first time, mapped to their contents. */
@@ -30,7 +30,7 @@ export type ScanResult = {
 	changed: Map<string, string>;
 	/** Files that disappeared, mapped to their last known contents. */
 	deleted: Map<string, string>;
-};
+}
 
 /** Projects file records down to the `path -> contents` map exposed publicly. */
 export const toContentMap = (

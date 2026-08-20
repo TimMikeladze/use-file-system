@@ -10,16 +10,16 @@ import {
 } from "./scan";
 import {
 	type DirectoryPickerOptions,
+	ensurePermission,
 	type FileRecord,
 	type FileSystemAccessMode,
-	type FileWriteOptions,
 	type FilesChangeHandler,
+	type FileWriteOptions,
 	type Filter,
 	type FilterFn,
-	type WritableFileData,
-	ensurePermission,
 	getDirectoryPicker,
 	isFileSystemAccessSupported,
+	type WritableFileData,
 } from "./types";
 import { DEFAULT_CONCURRENCY } from "./walk";
 
@@ -30,7 +30,7 @@ export const DEFAULT_DEBOUNCE_INTERVAL = 50;
 /** How long a scan must run before `isProcessing` flips to `true`. */
 export const DEFAULT_PROCESSING_INDICATOR_DELAY = 100;
 
-export type UseFileSystemOptions = {
+export interface UseFileSystemOptions {
 	/**
 	 * Filters applied while walking the watched directories.
 	 * Defaults to {@link commonFilters}.
@@ -77,20 +77,20 @@ export type UseFileSystemOptions = {
 	 * consumers twice per tick. Set to `0` to report every scan.
 	 */
 	processingIndicatorDelay?: number;
-};
+}
 
-type Snapshot = {
+interface Snapshot {
 	files: Map<string, string>;
 	handles: Map<string, FileSystemFileHandle>;
-};
+}
 
-type ResolvedEntry = {
+interface ResolvedEntry {
 	directory: FileSystemDirectoryHandle;
 	root: FileSystemDirectoryHandle;
 	rootPath: string;
 	name: string;
 	path: string;
-};
+}
 
 const EMPTY_SNAPSHOT: Snapshot = {
 	files: new Map(),

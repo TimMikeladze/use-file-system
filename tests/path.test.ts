@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 const NO_TRAVERSAL = /must not contain/;
 
 import {

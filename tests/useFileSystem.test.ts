@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { type Mock, afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, type Mock, vi } from "vitest";
 import { createFilter } from "../src/filters";
 import type { UseFileSystemOptions } from "../src/useFileSystem";
 import { useFs } from "../src/useFileSystem";
 import {
+	installDirectoryPicker,
 	MockDirectoryHandle,
 	MockFileSystem,
-	installDirectoryPicker,
 } from "./mock-fs";
 
 type Permissioned = FileSystemDirectoryHandle & {
@@ -769,7 +769,7 @@ describe("useFileSystem", () => {
 			usePicker(fs.handle);
 
 			const { result } = renderHook(() =>
-				useFs(testOptions({ processingIndicatorDelay: 5_000 })),
+				useFs(testOptions({ processingIndicatorDelay: 5000 })),
 			);
 
 			await act(async () => {

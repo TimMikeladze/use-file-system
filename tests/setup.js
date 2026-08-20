@@ -1,4 +1,4 @@
-// biome-ignore lint/style/noNamespaceImport: matchers are published as a namespace
+// biome-ignore lint/performance/noNamespaceImport: matchers are published as a namespace
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup } from "@testing-library/react";
 import { afterEach, expect } from "vitest";

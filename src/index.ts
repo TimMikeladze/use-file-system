@@ -32,8 +32,8 @@ export {
 	type DirectoryPickerOptions,
 	ensurePermission,
 	type FileRecord,
-	type FilesChangeHandler,
 	type FileSystemAccessMode,
+	type FilesChangeHandler,
 	type FileWriteOptions,
 	type Filter,
 	type FilterContext,
@@ -47,14 +47,14 @@ export {
 	DEFAULT_DEBOUNCE_INTERVAL,
 	DEFAULT_POLL_INTERVAL,
 	DEFAULT_PROCESSING_INDICATOR_DELAY,
-	useFileSystem,
 	type UseFileSystemOptions,
 	type UseFileSystemResult,
+	useFileSystem,
 	useFs,
 } from "./useFileSystem";
 export {
 	DEFAULT_CONCURRENCY,
-	walkDirectory,
 	type WalkOptions,
 	type WalkResult,
+	walkDirectory,
 } from "./walk";

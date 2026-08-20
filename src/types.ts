@@ -19,14 +19,14 @@ export type WellKnownDirectory =
 	| "videos";
 
 /** Options accepted by `window.showDirectoryPicker`. */
-export type DirectoryPickerOptions = {
+export interface DirectoryPickerOptions {
 	/** Groups picker invocations so the browser remembers the last location. */
 	id?: string;
 	/** Access level to request up front. Defaults to the hook's `mode`. */
 	mode?: FileSystemAccessMode;
 	/** Directory the picker should open in. */
 	startIn?: FileSystemHandle | WellKnownDirectory;
-};
+}
 
 /** Signature of `window.showDirectoryPicker`. */
 export type DirectoryPicker = (
@@ -95,7 +95,7 @@ export const ensurePermission = async (
 };
 
 /** Contextual information handed to every filter callback. */
-export type FilterContext = {
+export interface FilterContext {
 	/** Full path including the watched root, e.g. `my-project/src/index.ts`. */
 	path: string;
 	/** Path of the watched root directory, e.g. `my-project`. */
@@ -104,7 +104,7 @@ export type FilterContext = {
 	relativePath: string;
 	/** Name of the entry, e.g. `index.ts`. */
 	name: string;
-};
+}
 
 /**
  * Decides which entries of a watched directory are visible to the hook.
@@ -113,7 +113,7 @@ export type FilterContext = {
  * `shouldProcessDirectory` prunes the entire subtree, which is what keeps
  * directories such as `node_modules` from ever being enumerated.
  */
-export type Filter = {
+export interface Filter {
 	/**
 	 * Invoked once per directory *before* any of its entries are tested,
 	 * including before the directory's own children are recursed into. Use it to
@@ -131,7 +131,7 @@ export type Filter = {
 		context: FilterContext,
 		handle: FileSystemDirectoryHandle,
 	) => boolean | Promise<boolean>;
-};
+}
 
 /**
  * Factory for a {@link Filter}.
@@ -142,7 +142,7 @@ export type Filter = {
 export type FilterFn = () => Filter | Promise<Filter>;
 
 /** Options for {@link UseFileSystemResult.writeFile}. */
-export type FileWriteOptions = {
+export interface FileWriteOptions {
 	/**
 	 * Create the file (and any missing parent directories) when it does not
 	 * exist. Defaults to `true`.
@@ -155,7 +155,7 @@ export type FileWriteOptions = {
 	 * starting at offset `0`, which leaves any trailing bytes in place.
 	 */
 	truncate?: boolean;
-};
+}
 
 /** Data accepted by the write helpers. */
 export type WritableFileData = string | ArrayBuffer | ArrayBufferView | Blob;
@@ -167,9 +167,9 @@ export type FilesChangeHandler = (
 ) => void;
 
 /** Everything known about a watched file. */
-export type FileRecord = {
+export interface FileRecord {
 	handle: FileSystemFileHandle;
 	content: string;
 	lastModified: number;
 	size: number;
-};
+}

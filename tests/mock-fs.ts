@@ -3,22 +3,24 @@
  * this package uses, so the hook can be exercised without a browser.
  */
 
-export type MockTree = { [name: string]: string | MockTree };
+export interface MockTree {
+	[name: string]: string | MockTree;
+}
 
-type FileNode = {
+interface FileNode {
 	kind: "file";
 	name: string;
 	content: string;
 	lastModified: number;
-};
+}
 
-type DirectoryNode = {
+interface DirectoryNode {
 	kind: "directory";
 	name: string;
 	children: Map<string, Node>;
 	/** Makes `values()` reject, simulating a revoked permission. */
 	unreadable?: boolean;
-};
+}
 
 type Node = FileNode | DirectoryNode;
 

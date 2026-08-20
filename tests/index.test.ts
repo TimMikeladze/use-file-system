@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-// biome-ignore lint/style/noNamespaceImport: asserting the whole public surface
+// biome-ignore lint/performance/noNamespaceImport: asserting the whole public surface
 import * as useFsPackage from "../src/index";
 
 const EXPECTED_EXPORTS = [

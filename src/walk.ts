@@ -5,14 +5,14 @@ import type { Filter, FilterContext } from "./types";
 /** Default number of directories enumerated concurrently. */
 export const DEFAULT_CONCURRENCY = 8;
 
-export type WalkOptions = {
+export interface WalkOptions {
 	/** Maximum number of directories enumerated at once. Defaults to `8`. */
 	concurrency?: number;
 	/** Aborts the walk early. Already-collected files are still returned. */
 	signal?: AbortSignal;
-};
+}
 
-export type WalkResult = {
+export interface WalkResult {
 	/** Files that passed every filter, keyed by full path. */
 	files: Map<string, FileSystemFileHandle>;
 	/**
@@ -23,12 +23,12 @@ export type WalkResult = {
 	unreadableDirectories: string[];
 	/** Errors encountered while walking. The walk itself never rejects. */
 	errors: Error[];
-};
+}
 
-type PendingDirectory = {
+interface PendingDirectory {
 	handle: FileSystemDirectoryHandle;
 	path: string;
-};
+}
 
 const createContext = (path: string, rootPath: string): FilterContext => ({
 	path,
