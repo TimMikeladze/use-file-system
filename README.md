@@ -326,6 +326,10 @@ directory - whether it came from the picker or from OPFS. `LivePanel.tsx` also
 runs a scripted preview until a directory is opened. Design tokens - the three event
 colours, the type roles, the grid - are in `docs/src/app/global.css`.
 
+The social card is generated at build time by
+`docs/src/app/docs-og/[...slug]/route.tsx` - the same palette and the same
+watcher panel as the landing page - and its fonts live in `docs/assets/fonts`.
+
 When changing the package itself, run `pnpm dev` at the repository root in a
 second terminal. It rebuilds `dist` on every save and runs the tests in watch
 mode, and the demo picks the rebuild up on its next refresh.

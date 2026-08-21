@@ -1,6 +1,7 @@
 import "./global.css";
 import process from "node:process";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import type { Metadata } from "next";
 import { Geist_Mono, Martian_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 
@@ -19,6 +20,12 @@ const mono = Geist_Mono({
 	variable: "--font-mono",
 	display: "swap",
 });
+
+// Cards are served from absolute URLs, so the generated image needs a base to
+// resolve against.
+export const metadata: Metadata = {
+	metadataBase: new URL("https://use-fs.com"),
+};
 
 export default function Layout({ children }: { children: ReactNode }) {
 	return (
