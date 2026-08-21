@@ -24,7 +24,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 	return (
 		<html
 			lang="en"
-			className={`${display.variable} ${mono.variable}`}
+			// `dark` here matches what next-themes writes before paint, so the
+			// first frame is already dark instead of flashing light.
+			className={`dark ${display.variable} ${mono.variable}`}
 			suppressHydrationWarning={true}
 		>
 			{Boolean(
@@ -39,6 +41,10 @@ export default function Layout({ children }: { children: ReactNode }) {
 			)}
 			<body className="flex min-h-screen flex-col antialiased">
 				<RootProvider
+					theme={{
+						defaultTheme: "dark",
+						enableSystem: false,
+					}}
 					search={{
 						enabled: false,
 					}}

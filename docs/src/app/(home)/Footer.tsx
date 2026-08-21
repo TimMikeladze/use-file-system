@@ -10,7 +10,7 @@ const LINKS = [
 export const Footer = () => (
 	<footer className="border-line border-t">
 		<div className="u-shell py-16 lg:py-20">
-			<p className="u-eyebrow">Take it</p>
+			<p className="u-eyebrow">Get it</p>
 			<p className="u-display mt-4 font-semibold text-[clamp(1.35rem,4.4vw,2.4rem)] text-text">
 				npm install <span className="text-chg">use-fs</span>
 			</p>

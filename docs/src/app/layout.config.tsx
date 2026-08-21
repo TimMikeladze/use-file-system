@@ -33,8 +33,28 @@ const Mark = () => (
 	</svg>
 );
 
+/**
+ * The tagline rides in the app bar when there is room for it; below `lg` the
+ * hero shows it on its own line instead. Rendered through `nav.children` so
+ * the MDN link is a sibling of the title link, not nested inside it.
+ */
+const Tagline = () => (
+	<span className="ms-4 hidden items-center gap-2 border-line border-l py-1 ps-4 lg:inline-flex">
+		<span className="u-eyebrow">a React hook for the</span>
+		<a
+			href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API"
+			target="_blank"
+			rel="noopener noreferrer"
+			className="u-eyebrow text-chg underline decoration-chg/30 underline-offset-4 hover:decoration-chg"
+		>
+			File System Access API
+		</a>
+	</span>
+);
+
 export const baseOptions: BaseLayoutProps = {
 	nav: {
+		children: <Tagline />,
 		title: (
 			<div className="flex items-center gap-2">
 				<Mark />

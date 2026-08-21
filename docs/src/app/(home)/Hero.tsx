@@ -51,13 +51,9 @@ const HeroOpenButton = () => {
 
 export const Hero = () => (
 	<section>
-		{/* Top rail: what this is, before the claim. */}
-		<div className="border-line border-b">
-			<div className="u-shell flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
-				<span className="u-eyebrow text-text">use-fs</span>
-				<span aria-hidden="true" className="u-eyebrow">
-					/
-				</span>
+		{/* Below `lg` the app bar has no room for the tagline, so it sits here. */}
+		<div className="border-line border-b lg:hidden">
+			<div className="u-shell flex flex-wrap items-center gap-x-2 gap-y-1 py-3">
 				<span className="u-eyebrow">a React hook for the</span>
 				<a
 					href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API"
