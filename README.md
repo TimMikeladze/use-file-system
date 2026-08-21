@@ -212,7 +212,12 @@ straight away.
 2. Run `pnpm install` to install the dependencies
 3. Run `pnpm dev` to start the development server
 4. Navigate to `http://localhost:3000` to view the demo
-5. Modify the `Demo.tsx` file to make your changes
+
+The landing page lives in `docs/src/app/(home)`. A single `useFs` call sits in
+`FsStore.tsx` and is shared through context, so the hero's `LivePanel.tsx` and
+the `Demo.tsx` playground watch the same directory. `LivePanel.tsx` also runs a
+scripted preview until a folder is opened. Design tokens - the three event
+colours, the type roles, the grid - are in `docs/src/app/global.css`.
 
 When changing the package itself, run `pnpm dev` at the repository root in a
 second terminal. It rebuilds `dist` on every save and runs the tests in watch

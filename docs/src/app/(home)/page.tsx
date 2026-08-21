@@ -13,17 +13,12 @@ export async function generateMetadata(props: {
 	}
 
 	return metadataImage.withImage(page.slugs, {
-		title:
-			"use-fs • a React hook for integrating with the File System Access API.",
+		title: "use-fs • your folder is now state",
 		description:
-			"A React hook for integrating with the File System Access API.",
+			"A React hook for the File System Access API. Point useFs() at a directory on disk and your component re-renders whenever a file is added, changed or deleted.",
 	});
 }
 
 export default function Page() {
-	return (
-		<div>
-			<HomePage />
-		</div>
-	);
+	return <HomePage />;
 }
