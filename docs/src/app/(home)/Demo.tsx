@@ -6,10 +6,25 @@ import "react-install-command/styles.css";
 import { InstallCommand } from "react-install-command";
 import { commonFilters, useFs } from "use-fs";
 
-type FileState = {
+interface FileState {
 	path: string;
 	content: string | null;
 	previousContent: string | null;
+}
+
+interface HistoryEntry {
+	id: string;
+	type: "added" | "removed";
+	path: string;
+	timestamp: number;
+}
+
+// A batch of entries shares one `Date.now()`, and the same path can be added
+// and removed repeatedly, so nothing in the entry itself identifies a row.
+let historyEntryId = 0;
+const nextHistoryEntryId = () => {
+	historyEntryId += 1;
+	return `history-${historyEntryId}`;
 };
 
 const App = () => {
@@ -18,13 +33,7 @@ const App = () => {
 		content: null,
 		previousContent: null,
 	});
-	const [fileHistory, setFileHistory] = React.useState<
-		Array<{
-			type: "added" | "removed";
-			path: string;
-			timestamp: number;
-		}>
-	>([]);
+	const [fileHistory, setFileHistory] = React.useState<HistoryEntry[]>([]);
 	const [isEditMode, setIsEditMode] = React.useState(false);
 	const [editableContent, setEditableContent] = React.useState("");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
@@ -35,7 +44,6 @@ const App = () => {
 		files,
 		isBrowserSupported,
 		writeFile,
-		setFiles,
 		startPolling,
 		stopPolling,
 		isPolling,
@@ -44,6 +52,7 @@ const App = () => {
 		onFilesAdded: (newFiles, previousFiles) => {
 			console.log("onFilesAdded", newFiles, previousFiles);
 			const newEntries = Array.from(newFiles.keys()).map((path) => ({
+				id: nextHistoryEntryId(),
 				type: "added" as const,
 				path,
 				timestamp: Date.now(),
@@ -66,6 +75,7 @@ const App = () => {
 				setSelectedFile({ path: "", content: null, previousContent: null });
 			}
 			const deletedEntries = Array.from(deletedFiles.keys()).map((path) => ({
+				id: nextHistoryEntryId(),
 				type: "removed" as const,
 				path,
 				timestamp: Date.now(),
@@ -91,9 +101,8 @@ const App = () => {
 		setFileHistory([]);
 	};
 
-	const formatTimestamp = (timestamp: number) => {
-		return new Date(timestamp).toLocaleTimeString();
-	};
+	const formatTimestamp = (timestamp: number) =>
+		new Date(timestamp).toLocaleTimeString();
 
 	const renderDiff = (oldContent: string | null, newContent: string | null) => {
 		if (!(oldContent || newContent)) {
@@ -102,7 +111,7 @@ const App = () => {
 		if (!oldContent) {
 			// New file
 			return newContent?.split("\n").map((line, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+				// biome-ignore lint/suspicious/noArrayIndexKey: line order is the identity here
 				<div key={i} className="text-green-600">
 					+ {line}
 				</div>
@@ -111,7 +120,7 @@ const App = () => {
 		if (!newContent) {
 			// Deleted file
 			return oldContent?.split("\n").map((line, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+				// biome-ignore lint/suspicious/noArrayIndexKey: line order is the identity here
 				<div key={i} className="text-red-600">
 					- {line}
 				</div>
@@ -182,21 +191,13 @@ const App = () => {
 					throw new Error("Selected file no longer exists");
 				}
 
-				await writeFile(selectedFile.path, editableContent, { truncate: true });
+				await writeFile(selectedFile.path, editableContent);
 				setSelectedFile((prev) => ({
 					...prev,
 					previousContent: prev.content,
 					content: editableContent,
 				}));
 				setHasUnsavedChanges(false);
-
-				// Instead of using setFiles, we can force a refresh by clearing and resetting the selected file
-				const content = files.get(selectedFile.path) || null;
-				setSelectedFile({
-					path: selectedFile.path,
-					content,
-					previousContent: null,
-				});
 			} catch (error: unknown) {
 				console.error("Error saving file:", error);
 				if (error instanceof Error) {
@@ -357,10 +358,10 @@ function App() {
 									}) => (
 										<pre className={`${className} p-4 text-sm`} style={style}>
 											{tokens.map((line, i) => (
-												// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+												// biome-ignore lint/suspicious/noArrayIndexKey: token lines are positional
 												<div key={i} {...getLineProps({ line })}>
 													{line.map((token, key) => (
-														// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+														// biome-ignore lint/suspicious/noArrayIndexKey: tokens are positional
 														<span key={key} {...getTokenProps({ token })} />
 													))}
 												</div>
@@ -672,9 +673,9 @@ function App() {
 					</div>
 					<div className="p-4">
 						<div className="max-h-[200px] space-y-2 overflow-y-auto">
-							{fileHistory.map((entry, index) => (
+							{fileHistory.map((entry) => (
 								<div
-									key={`${entry.path}-${entry.timestamp}-${index}`}
+									key={entry.id}
 									className="flex items-center justify-between rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-800/50"
 								>
 									<div className="flex items-center space-x-3">

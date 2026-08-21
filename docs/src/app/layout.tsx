@@ -1,5 +1,6 @@
 import "./global.css";
-import { RootProvider } from "fumadocs-ui/provider";
+import process from "node:process";
+import { RootProvider } from "fumadocs-ui/provider/next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 

@@ -2,7 +2,7 @@ import childProcess from "node:child_process";
 import fs from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { type Options, defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 
 const common: Options = {
 	entry: ["src/index.ts"],
@@ -20,10 +20,10 @@ const common: Options = {
 const getPackageName = async () => {
 	try {
 		const packageJson = JSON.parse(
-			await readFile(path.join(__dirname, "package.json"), "utf-8"),
+			await readFile(path.join(import.meta.dirname, "package.json"), "utf-8"),
 		);
 		return packageJson.name;
-	} catch (_error) {
+	} catch {
 		return "package-name";
 	}
 };
@@ -32,7 +32,7 @@ const _addUseStatement = async (
 	basePath: string,
 	type: "server" | "client",
 ) => {
-	const fullPath = path.join(__dirname, basePath);
+	const fullPath = path.join(import.meta.dirname, basePath);
 	const files = fs.readdirSync(fullPath);
 
 	for (const file of files) {
@@ -49,7 +49,7 @@ const linkSelf = async () => {
 	await new Promise((resolve) => {
 		childProcess.exec("pnpm link:self", (error, _stdout, _stderr) => {
 			if (error) {
-				// biome-ignore lint/suspicious/noConsole: <explanation>
+				// biome-ignore lint/suspicious/noConsole: surfacing the link failure to the CLI
 				console.error(`exec error: ${error}`);
 				return;
 			}
@@ -58,8 +58,7 @@ const linkSelf = async () => {
 		});
 	});
 
-	// biome-ignore lint/suspicious/noConsoleLog: <explanation>
-	// biome-ignore lint/suspicious/noConsole: <explanation>
+	// biome-ignore lint/suspicious/noConsole: the CLI prints this hint on purpose
 	console.log(
 		`Run 'pnpm link ${await getPackageName()} --global' inside another project to consume this package.`,
 	);

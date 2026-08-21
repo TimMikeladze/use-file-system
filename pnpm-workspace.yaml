@@ -1,0 +1,45 @@
+# The docs site is a workspace member so it shares a single install with the
+# package it demos. That is what keeps React deduplicated: a separate install
+# under docs/ would give the linked package its own React copy and every hook
+# call inside `use-fs` would render against a null dispatcher.
+packages:
+  - docs
+
+# pnpm >= 11 no longer reads the "pnpm" field in package.json; these settings
+# live here instead. pnpm 10.16+ reads them from here too.
+#
+# `overrides` is deliberately declared BOTH here and in package.json's "pnpm"
+# field, and the two must be kept identical. The lockfile records the override,
+# so any pnpm that cannot see it fails a frozen install with
+# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH - and pnpm 9 reads only package.json while
+# pnpm 11 reads only this file. Vercel picks its pnpm from the lockfile format
+# (`lockfileVersion: 9.0` -> pnpm 9) and ignores `packageManager` unless the
+# project sets ENABLE_EXPERIMENTAL_COREPACK=1, so the deploy really does run
+# pnpm 9 even though everything else here is pinned to pnpm 10.
+overrides:
+  micromatch@<4.0.8: '>=4.0.8'
+
+# Dependencies that ship an install script have to be accounted for or pnpm 11
+# fails the install with ERR_PNPM_IGNORED_BUILDS. pnpm 11 spells this
+# `allowBuilds`; pnpm 10 spells it onlyBuiltDependencies/ignoredBuiltDependencies,
+# so both are listed and either version installs without prompting.
+#
+# Only lefthook needs its script, to sync the git hooks. The rest ship their
+# native binaries as platform-specific optional dependencies.
+allowBuilds:
+  "@biomejs/biome": false
+  "@swc/core": false
+  "@tailwindcss/oxide": false
+  esbuild: false
+  lefthook: true
+  sharp: false
+
+onlyBuiltDependencies:
+  - lefthook
+
+ignoredBuiltDependencies:
+  - "@biomejs/biome"
+  - "@swc/core"
+  - "@tailwindcss/oxide"
+  - esbuild
+  - sharp

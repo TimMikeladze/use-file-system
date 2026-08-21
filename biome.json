@@ -1,20 +1,23 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
 	"files": {
-		"ignore": [
-			"**/dist/**",
-			"**/storybook-static/**",
-			"**/coverage/**",
-			"**/.next/**",
-			"**/node_modules/**",
-			"**/example/**",
-			"**/.source/**"
+		"includes": [
+			"**",
+			"!**/dist",
+			"!**/storybook-static",
+			"!**/coverage",
+			"!**/.next",
+			"!**/node_modules",
+			"!**/example",
+			"!**/.source",
+			"!**/next-env.d.ts"
 		]
 	},
-	"organizeImports": {
-		"enabled": true
-	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		},
 		"formatter": {
 			"enabled": true
 		},
@@ -26,7 +29,9 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
+			"preset": "all",
 			"nursery": {
+				"recommended": false,
 				"useSortedClasses": {
 					"fix": "safe",
 					"level": "error",
@@ -36,7 +41,6 @@
 					}
 				}
 			},
-			"all": true,
 			"style": {
 				"noDefaultExport": "off",
 				"useFilenamingConvention": "off",
@@ -56,13 +60,11 @@
 				"noConsole": {
 					"fix": "none",
 					"level": "warn"
-				},
-				"noConsoleLog": {
-					"fix": "none",
-					"level": "warn"
 				}
 			},
 			"correctness": {
+				"useQwikValidLexicalScope": "off",
+				"noUnresolvedImports": "off",
 				"useImportExtensions": "off",
 				"noUndeclaredDependencies": "off",
 				"noUnusedVariables": "off",

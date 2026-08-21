@@ -26,8 +26,8 @@ pnpm add use-fs
 import { useFs } from "use-fs";
 
 function App() {
-  const { 
-    onDirectorySelection, 
+  const {
+    onDirectorySelection,
     files,
     isBrowserSupported,
     onClear,
@@ -36,36 +36,24 @@ function App() {
     deleteFile,
     startPolling,
     stopPolling,
-    isPolling
+    isPolling,
+    error,
   } = useFs({
-    // Optional array of filter functions to exclude files/directories. By default `commonFilters` is used to ignore .git, node_modules, etc.
-    filters: [
-      // Built-in filters available:
-      // - distFilter (excludes dist/, build/, node_modules/, etc.)
-      // - gitFilter (respects .gitignore)
-      // - miscFilter (excludes .DS_Store, etc.)
-      // Or use commonFilters which includes all of the above
-    ],
-    
-    // Called when new files are added to the watched directory
+    // Called when new files appear in a watched directory.
     onFilesAdded: (newFiles, previousFiles) => {
-      console.log('Files added:', newFiles);
-      // newFiles: Map<string, string> - path -> content
-      // previousFiles: Map<string, string> - previous state
+      // newFiles: Map<string, string> - path -> contents
+      // previousFiles: Map<string, string> - the state before this change
+      console.log("Files added:", newFiles);
     },
 
-    // Called when existing files are modified
+    // Called when a watched file's contents change.
     onFilesChanged: (changedFiles, previousFiles) => {
-      console.log('Files changed:', changedFiles);
-      // changedFiles: Map<string, string> - path -> new content
-      // previousFiles: Map<string, string> - previous state
+      console.log("Files changed:", changedFiles);
     },
 
-    // Called when files are deleted from the watched directory
+    // Called when a watched file disappears. The map holds its last contents.
     onFilesDeleted: (deletedFiles, previousFiles) => {
-      console.log('Files deleted:', deletedFiles);
-      // deletedFiles: Map<string, string> - path -> last known content
-      // previousFiles: Map<string, string> - previous state
+      console.log("Files deleted:", deletedFiles);
     },
   });
 
@@ -73,128 +61,161 @@ function App() {
     return <div>Browser not supported</div>;
   }
 
-  const handleSaveFile = async (path: string, content: string) => {
-    try {
-      await writeFile(path, content, { truncate: true });
-      console.log('File saved successfully');
-    } catch (error) {
-      console.error('Error saving file:', error);
-    }
-  };
-
-  const handleDeleteFile = async (path: string) => {
-    try {
-      await deleteFile(path);
-      console.log('File deleted successfully');
-    } catch (error) {
-      console.error('Error deleting file:', error);
-    }
-  };
-
   return (
     <div>
-      <button 
-        onClick={onDirectorySelection}
-        disabled={isProcessing}
-      >
-        Select Directory
-      </button>
+      <button onClick={() => onDirectorySelection()}>Select Directory</button>
+      <button onClick={onClear}>Clear</button>
 
-      <button 
-        onClick={onClear}
-        disabled={isProcessing}
-      >
-        Clear
-      </button>
-
-      <button 
-        onClick={startPolling}
-        disabled={isProcessing || isPolling}
-      >
+      <button onClick={startPolling} disabled={isPolling}>
         Start Polling
       </button>
-
-      <button 
-        onClick={stopPolling}
-        disabled={isProcessing || !isPolling}
-      >
+      <button onClick={stopPolling} disabled={!isPolling}>
         Stop Polling
       </button>
 
-      <div>
-        Status: {isPolling ? 'Polling Active' : 'Polling Stopped'}
-      </div>
+      <div>Status: {isPolling ? "Polling Active" : "Polling Stopped"}</div>
+      {error && <div role="alert">{error.message}</div>}
 
-      {files.size > 0 && (
-        <div>
-          <h2>Files ({files.size}):</h2>
-          <div>
-            {Array.from(files.entries()).map(([path, content]) => (
-              <div key={path}>
-                <h3>{path}</h3>
-                <pre>{content}</pre>
-                <button onClick={() => handleSaveFile(path, 'New content')}>
-                  Save Changes
-                </button>
-                <button onClick={() => handleDeleteFile(path)}>
-                  Delete File
-                </button>
-              </div>
-            ))}
-          </div>
+      {Array.from(files.entries()).map(([path, content]) => (
+        <div key={path}>
+          <h3>{path}</h3>
+          <pre>{content}</pre>
+          <button onClick={() => writeFile(path, "New content")}>Save</button>
+          <button onClick={() => deleteFile(path)}>Delete</button>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 ```
 
-The hook provides several key features:
+Paths are POSIX-style and always prefixed with the name of the watched root directory, e.g. `my-project/src/index.ts`. Every path passed to `writeFile`, `createFile`, `deleteFile` and `deleteDirectory` must resolve inside a watched directory; `.` and `..` segments are rejected.
 
-1. **File System Access**: Prompts users to select a directory and maintains access to it.
-2. **File Writing**: Allows writing content to files with options for truncation and creation.
-3. **File Deletion**: Enables safe removal of files from the selected directory.
-4. **File Watching**: Continuously monitors selected directory for changes with automatic polling.
-5. **Polling Control**: Manual control over when to start/stop monitoring for file changes.
-6. **Content Management**: Provides access to file contents and updates in real-time.
-7. **Filtering**: Built-in and custom filters to exclude unwanted files/directories.
-8. **Performance Optimizations**: 
-   - Batched file processing
-   - Content caching
-   - Debounced updates
-   - Efficient change detection
+## 🔍 How watching works
 
-### Props
+The hook re-scans every watched directory on an interval:
 
-- `filters?: FilterFn[]` - Array of filter functions to exclude files/directories
-- `onFilesAdded?: (newFiles: Map<string, string>, previousFiles: Map<string, string>) => void` - Callback when files are added
-- `onFilesChanged?: (changedFiles: Map<string, string>, previousFiles: Map<string, string>) => void` - Callback when files change
-- `onFilesDeleted?: (deletedFiles: Map<string, string>, previousFiles: Map<string, string>) => void` - Callback when files are deleted
-- `pollInterval?: number` - How often to check for changes (default: 100ms)
-- `batchSize?: number` - How many files to process in parallel (default: 50)
-- `debounceInterval?: number` - Debounce interval for updates (default: 50ms)
-- `fileCacheTtl?: number` - How long to cache file contents (default: 5000ms)
+1. The tree is walked breadth-first with a bounded number of directories open at once. Filters that reject a directory prune the whole subtree, so `node_modules` is never enumerated.
+2. Each discovered file is stat'd. Contents are only re-read when `lastModified` or `size` changed, so a steady-state poll over a large tree does no content I/O.
+3. Added, changed and deleted files are diffed against the previous scan and reported through the callbacks. Rendered state updates are coalesced by `debounceInterval`; callbacks always fire immediately.
 
-### Return Values
+Scans never throw. A directory that cannot be enumerated (revoked permission, removed mid-scan) keeps its last known contents instead of being reported as deleted, and the error is surfaced through `error` and `onError`.
 
-- `onDirectorySelection: () => Promise<void>` - Function to open directory picker
-- `onClear: () => void` - Function to stop watching and clear state
-- `files: Map<string, string>` - Current map of file paths to contents
-- `isProcessing: boolean` - Whether files are being processed
-- `isBrowserSupported: boolean` - Whether File System API is supported
-- `writeFile: (path: string, data: string | ArrayBuffer | Blob, options?: FileWriteOptions) => Promise<void>` - Function to write to files
-- `deleteFile: (path: string) => Promise<void>` - Function to delete files
-- `startPolling: () => void` - Function to manually start polling for file changes
-- `stopPolling: () => void` - Function to manually stop polling for file changes  
-- `isPolling: boolean` - Whether the hook is actively polling for changes
+## 🔐 Permissions
 
+`onDirectorySelection` requests `mode: "read"` by default. Writing prompts for `readwrite` access the first time it is needed, which requires a user gesture - so call `writeFile` from an event handler. To get write access up front, pass `mode: "readwrite"`:
+
+```tsx
+const fs = useFs({ mode: "readwrite" });
+```
+
+`addDirectory` accepts a handle directly, which is how you restore access across sessions after persisting a handle in IndexedDB:
+
+```tsx
+const handle = await loadHandleFromIndexedDb();
+
+if ((await handle.queryPermission({ mode: "read" })) === "granted") {
+  await fs.addDirectory(handle);
+}
+```
+
+## 🧹 Filters
+
+A filter decides which entries are visible to the hook. `commonFilters` (the default) prunes build output, drops OS scratch files and honours every `.gitignore` in the tree.
+
+```tsx
+import { commonFilters, createFilter, useFs } from "use-fs";
+
+const onlyTypeScript = createFilter({
+  shouldIncludeFile: ({ name }) => name.endsWith(".ts") || name.endsWith(".tsx"),
+});
+
+useFs({ filters: [...commonFilters, onlyTypeScript] });
+```
+
+Every callback receives a context object rather than a bare path:
+
+| Field | Description |
+| --- | --- |
+| `path` | Full path including the watched root, e.g. `my-project/src/index.ts` |
+| `rootPath` | Path of the watched root, e.g. `my-project` |
+| `relativePath` | Path relative to the watched root, e.g. `src/index.ts` |
+| `name` | Name of the entry, e.g. `index.ts` |
+
+Filters may also implement `onDirectoryEnter`, which runs before any of a directory's entries are tested - that is how `gitFilter` loads a `.gitignore` before deciding anything in its directory.
+
+Built-in filters:
+
+- `distFilter` - prunes `node_modules`, `dist`, `build`, `out`, `vendor`, `coverage`, `.next`, `.nuxt`, `.turbo`, `.cache`, `.output`, `.svelte-kit`, `.parcel-cache`
+- `miscFilter` - drops `.DS_Store`, `Thumbs.db`, `desktop.ini` and `*.crswap`
+- `gitFilter` - honours nested `.gitignore` files and always skips `.git`
+- `commonFilters` - all of the above
+
+Builders: `createFilter`, `createExcludedDirectoryFilter`, `createExcludedFileFilter`.
+
+### Options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `filters` | `commonFilters` | Filters applied while walking watched directories |
+| `onFilesAdded` | – | Called with files seen for the first time |
+| `onFilesChanged` | – | Called with files whose contents changed |
+| `onFilesDeleted` | – | Called with files that disappeared, mapped to their last known contents |
+| `onError` | – | Called for every recoverable error |
+| `pollInterval` | `300` | Delay between scans, in milliseconds |
+| `debounceInterval` | `50` | How long rendered state updates are coalesced. `0` updates synchronously |
+| `batchSize` | `50` | Maximum number of files read concurrently |
+| `concurrency` | `8` | Maximum number of directories enumerated concurrently |
+| `mode` | `"read"` | Access level requested when opening the picker |
+| `autoStartPolling` | `true` | Start polling as soon as a directory is added |
+| `processingIndicatorDelay` | `100` | How long a scan must run before `isProcessing` flips to `true` |
+
+Options are read at the moment they are used, so inline callbacks and filter arrays never need to be memoized.
+
+### Return values
+
+| Value | Description |
+| --- | --- |
+| `files: Map<string, string>` | Watched files, keyed by path |
+| `handles: Map<string, FileSystemFileHandle>` | File handles, keyed by path |
+| `directories: string[]` | Paths of the watched root directories |
+| `isProcessing: boolean` | Whether a scan has been running long enough to be worth showing |
+| `isPolling: boolean` | Whether the hook is polling for changes |
+| `isBrowserSupported: boolean` | Whether the File System Access API is available |
+| `error: Error \| null` | The most recent recoverable error |
+| `onDirectorySelection(options?)` | Opens the picker and watches the chosen directory. Resolves to its path, or `null` if the picker was dismissed |
+| `addDirectory(handle)` | Watches an existing handle. Resolves to the path it is exposed under |
+| `removeDirectory(path)` | Stops watching a directory without touching disk |
+| `onClear()` | Stops watching everything and resets the hook |
+| `refresh()` | Runs a scan immediately |
+| `startPolling()` / `stopPolling()` | Manual control over the polling loop |
+| `writeFile(path, data, options?)` | Writes to a file, creating it and any missing parents by default |
+| `createFile(path, initialData?)` | Creates (or opens) a file and returns its handle |
+| `deleteFile(path)` | Deletes a file |
+| `deleteDirectory(path)` | Deletes a directory and everything below it |
+| `requestPermission(mode?)` | Requests access for every watched directory |
+
+`writeFile` replaces the file's contents by default. Pass `{ truncate: false }` to write over the existing bytes from offset `0` and keep anything trailing, or `{ create: false }` to fail instead of creating a missing file.
+
+### Lower-level exports
+
+`walkDirectory`, `scanDirectories`, `toContentMap`, `normalizePath`, `isFileSystemAccessSupported`, `getDirectoryPicker` and `ensurePermission` are exported for building on top of the same primitives the hook uses.
 
 ## 📚 Contributing
+
+The demo site depends on the package through `"use-fs": "link:.."`, so it always
+runs your local build - there is no `pnpm link` step and no published release
+involved. `cd docs && pnpm dev` builds the package first, so a fresh clone works
+straight away.
 
 1. Navigate to the `docs` directory
 2. Run `pnpm install` to install the dependencies
 3. Run `pnpm dev` to start the development server
-3. Navigate to `http://localhost:3000` to view the demo.
-5. Modify the `Demo.tsx` file to make your changes.
+4. Navigate to `http://localhost:3000` to view the demo
+5. Modify the `Demo.tsx` file to make your changes
 
-If you're making changes to the `use-fs` package, you can run `pnpm build` to build the package and then run `pnpm link use-fs` to link the package to the `docs` directory for local development and testing.
+When changing the package itself, run `pnpm dev` at the repository root in a
+second terminal. It rebuilds `dist` on every save and runs the tests in watch
+mode, and the demo picks the rebuild up on its next refresh.
+
+Run `pnpm test` for the test suite, `pnpm typecheck` for types and `pnpm lint` for formatting and lint.

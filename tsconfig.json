@@ -1,12 +1,19 @@
 {
 	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["ES2022", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
 		"esModuleInterop": true,
 		"jsx": "react-jsx",
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"skipLibCheck": true,
 		"strict": true,
-		"noEmit": true
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"noEmit": true,
+		"ignoreDeprecations": "6.0"
 	},
-	"exclude": ["docs"]
+	"include": ["src", "tests", "*.ts", "*.mts", ".storybook"],
+	"exclude": ["docs", "node_modules", "dist"]
 }

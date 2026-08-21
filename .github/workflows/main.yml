@@ -17,16 +17,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      # No `version` input: action-setup reads the `packageManager` field in
+      # package.json, so CI, Vercel and a local checkout all run the same pnpm.
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: latest
           run_install: false
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Get pnpm store directory
@@ -57,8 +58,7 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Install example dependencies
-        run: cd docs && pnpm install --frozen-lockfile
-
+      # The docs site is a workspace member, so the install above already
+      # covers it.
       - name: Build example
-        run: cd docs && pnpm build
+        run: pnpm --filter docs build
