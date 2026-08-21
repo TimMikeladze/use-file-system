@@ -18,6 +18,9 @@ const CHG = "#f4b13c";
 const DEL = "#ff7a72";
 const CODE_FN = "#7fb4f5";
 const LINE = "rgba(255,255,255,0.09)";
+// Held in a constant because biome rewrites a `//` JSX text node into a real
+// JSX comment, which would drop the line from the card.
+const CODE_NOTE = "// no picker, no prompt, no gesture";
 const CELL = 24;
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -47,7 +50,7 @@ const gridLines = () => {
 					top: 0,
 					width: 1,
 					height: HEIGHT,
-					background: "rgba(255,255,255,0.035)",
+					background: "rgba(255,255,255,0.014)",
 				}}
 			/>,
 		);
@@ -63,7 +66,7 @@ const gridLines = () => {
 					top: y,
 					width: WIDTH,
 					height: 1,
-					background: "rgba(255,255,255,0.035)",
+					background: "rgba(255,255,255,0.014)",
 				}}
 			/>,
 		);
@@ -391,7 +394,7 @@ export const GET = metadataImage.createAPI((page) => {
 						<div style={{ marginLeft: 8, color: FAINT }}>{"})"}</div>
 					</div>
 					<div style={{ marginTop: 6, fontSize: 12.5, color: FAINT }}>
-						{/* no picker, no prompt, no gesture */}
+						{CODE_NOTE}
 					</div>
 				</div>
 			</div>

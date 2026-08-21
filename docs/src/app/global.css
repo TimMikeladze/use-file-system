@@ -32,7 +32,7 @@
 	--chg-bed: rgb(168 105 10 / 0.1);
 	--del-bed: rgb(207 65 57 / 0.1);
 
-	--grid: rgb(11 15 22 / 0.045);
+	--grid: rgb(11 15 22 / 0.02);
 
 	/* Syntax needs one hue beyond the three events; it stays in the family. */
 	--code-fn: #2f6fb5;
@@ -82,7 +82,7 @@
 	--chg-bed: rgb(244 177 60 / 0.12);
 	--del-bed: rgb(255 122 114 / 0.12);
 
-	--grid: rgb(255 255 255 / 0.035);
+	--grid: rgb(255 255 255 / 0.014);
 	--code-fn: #7fb4f5;
 }
 
