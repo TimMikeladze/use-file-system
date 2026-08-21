@@ -119,8 +119,13 @@ const App = () => {
 		applyWrite,
 		open,
 		isOpening,
+		openOpfs,
+		isOpeningOpfs,
+		isOpfs,
 		reset,
+		mountError,
 		isBrowserSupported,
+		isOpfsSupported,
 		isProcessing,
 		isPolling,
 		error,
@@ -129,6 +134,7 @@ const App = () => {
 		stopPolling,
 	} = useFsStore();
 
+	const busy = isOpening || isOpeningOpfs;
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [draft, setDraft] = React.useState("");
 	const [isDirty, setIsDirty] = React.useState(false);
@@ -192,22 +198,32 @@ const App = () => {
 					</h2>
 				</div>
 				<p className="max-w-[38ch] text-[12px] text-faint leading-relaxed">
-					The same directory the panel at the top is watching. Everything runs
-					in this tab against your own disk — nothing is uploaded, and access
-					ends when you close it.
+					The same directory the panel at the top is watching — a folder off
+					your disk, or the browser's own storage. Everything runs in this tab;
+					nothing is uploaded, and disk access ends when you close it.
 				</p>
 			</div>
 
-			{!isBrowserSupported && (
+			{!(isBrowserSupported || isOpfsSupported) && (
 				<p className="mt-8 border border-del/40 bg-del-bed px-4 py-3 text-[12.5px] text-del">
-					This browser has no File System Access API. Open the page in desktop
-					Chrome, Edge or Opera to use the playground.
+					This browser has neither the File System Access API nor the origin
+					private file system. Open the page in a current Chrome, Edge, Opera,
+					Safari or Firefox to use the playground.
 				</p>
 			)}
 
-			{error && (
+			{!isBrowserSupported && isOpfsSupported && (
+				<p className="mt-8 border border-line bg-panel px-4 py-3 text-[12.5px] text-dim">
+					No directory picker in this browser — that part needs desktop Chrome,
+					Edge or Opera. <span className="text-text">Use browser storage</span>{" "}
+					instead: it is the same hook against the origin private file system,
+					and everything below works.
+				</p>
+			)}
+
+			{(mountError ?? error) && (
 				<p className="mt-8 border border-chg/40 bg-chg-bed px-4 py-3 text-[12.5px] text-chg">
-					{error.message}
+					{(mountError ?? error)?.message}
 				</p>
 			)}
 
@@ -217,7 +233,7 @@ const App = () => {
 					<button
 						type="button"
 						onClick={open}
-						disabled={isOpening || !isBrowserSupported}
+						disabled={busy || !isBrowserSupported}
 						className={`${buttonBase} border-line-strong bg-text text-ground hover:opacity-85`}
 					>
 						{isOpening
@@ -228,11 +244,19 @@ const App = () => {
 					</button>
 					<button
 						type="button"
+						onClick={openOpfs}
+						disabled={busy || !isOpfsSupported}
+						className={`${buttonBase} border-line-strong text-text hover:bg-inset`}
+					>
+						{isOpeningOpfs ? "Mounting…" : "Use browser storage"}
+					</button>
+					<button
+						type="button"
 						onClick={() => {
 							reset();
 							leaveEditing();
 						}}
-						disabled={files.size === 0}
+						disabled={directories.length === 0}
 						className={`${buttonBase} border-line text-dim hover:border-line-strong hover:text-text`}
 					>
 						Close
@@ -240,7 +264,7 @@ const App = () => {
 					<button
 						type="button"
 						onClick={isPolling ? stopPolling : startPolling}
-						disabled={files.size === 0}
+						disabled={directories.length === 0}
 						className={`${buttonBase} ${
 							isPolling
 								? "border-chg/40 text-chg hover:bg-chg-bed"
@@ -255,11 +279,18 @@ const App = () => {
 							<span className="u-eyebrow text-chg">scanning</span>
 						)}
 						{root && (
-							<span
-								className="max-w-[16rem] truncate text-[12px] text-dim"
-								title={root}
-							>
-								{root}
+							<span className="flex min-w-0 items-center gap-2">
+								{isOpfs && (
+									<span className="u-eyebrow shrink-0 border border-line px-1 text-[9px] text-add">
+										opfs
+									</span>
+								)}
+								<span
+									className="max-w-[16rem] truncate text-[12px] text-dim"
+									title={root}
+								>
+									{root}
+								</span>
 							</span>
 						)}
 						<span className="u-eyebrow">
@@ -295,8 +326,16 @@ const App = () => {
 					>
 						{paths.length === 0 ? (
 							<Empty
-								headline="No folder open."
-								hint="Nothing is read until you pick one. commonFilters skips node_modules, build output and anything your .gitignore lists."
+								headline={
+									directories.length > 0
+										? "This directory is empty."
+										: "Nothing open yet."
+								}
+								hint={
+									directories.length > 0
+										? "Write a file to it and the watcher picks it up on the next scan. commonFilters hides node_modules, build output and anything your .gitignore lists."
+										: "Pick a folder, or mount browser storage — nothing is read until you do. commonFilters skips node_modules, build output and anything your .gitignore lists."
+								}
 							/>
 						) : (
 							<div className="u-scroll h-[26rem] overflow-y-auto py-1">

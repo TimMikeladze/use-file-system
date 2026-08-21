@@ -12,6 +12,12 @@ export {
 	miscFilter,
 } from "./filters";
 export {
+	DEFAULT_OPFS_PATH,
+	getOpfsRoot,
+	isOpfsSupported,
+	type OpfsMountOptions,
+} from "./opfs";
+export {
 	basename,
 	dirname,
 	isAtOrWithin,
@@ -28,6 +34,7 @@ export {
 	toContentMap,
 } from "./scan";
 export {
+	type AddDirectoryOptions,
 	type DirectoryPicker,
 	type DirectoryPickerOptions,
 	ensurePermission,
@@ -44,6 +51,7 @@ export {
 	type WritableFileData,
 } from "./types";
 export {
+	type AddOpfsDirectoryOptions,
 	DEFAULT_DEBOUNCE_INTERVAL,
 	DEFAULT_POLL_INTERVAL,
 	DEFAULT_PROCESSING_INDICATOR_DELAY,

@@ -141,6 +141,18 @@ export interface Filter {
  */
 export type FilterFn = () => Filter | Promise<Filter>;
 
+/** Options for {@link UseFileSystemResult.addDirectory}. */
+export interface AddDirectoryOptions {
+	/**
+	 * Path to expose the directory under, instead of the handle's own name.
+	 *
+	 * Required for a handle whose `name` is empty - the OPFS root is the one
+	 * that occurs in practice. Traversal segments are rejected, and a path
+	 * already in use gets a ` (2)` suffix like any other collision.
+	 */
+	path?: string;
+}
+
 /** Options for {@link UseFileSystemResult.writeFile}. */
 export interface FileWriteOptions {
 	/**

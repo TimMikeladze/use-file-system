@@ -384,3 +384,34 @@ export const installDirectoryPicker = (
 		Reflect.deleteProperty(window, "showDirectoryPicker");
 	};
 };
+
+/**
+ * Installs `navigator.storage.getDirectory`, returning a cleanup function.
+ *
+ * The handle is deliberately built from a `MockFileSystem` with an empty name
+ * and no permission methods, which is exactly what a browser hands back for the
+ * origin private file system root.
+ */
+export const installOpfs = (
+	handle:
+		| FileSystemDirectoryHandle
+		| (() => Promise<FileSystemDirectoryHandle>),
+) => {
+	const getDirectory =
+		typeof handle === "function" ? handle : () => Promise.resolve(handle);
+	const previous = Object.getOwnPropertyDescriptor(navigator, "storage");
+
+	Object.defineProperty(navigator, "storage", {
+		configurable: true,
+		writable: true,
+		value: { getDirectory },
+	});
+
+	return () => {
+		if (previous) {
+			Object.defineProperty(navigator, "storage", previous);
+		} else {
+			Reflect.deleteProperty(navigator, "storage");
+		}
+	};
+};

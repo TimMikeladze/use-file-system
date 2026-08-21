@@ -6,13 +6,18 @@ const STATE = [
 	["directories", "Paths of the watched roots"],
 	["isProcessing", "A scan has run long enough to be worth showing"],
 	["isPolling", "The polling loop is running"],
-	["isBrowserSupported", "The File System Access API is available"],
+	["isBrowserSupported", "The directory picker is available"],
+	["isOpfsSupported", "The origin private file system is available"],
 	["error", "Most recent recoverable error, or null"],
 ];
 
 const ACTIONS = [
 	["onDirectorySelection()", "Open the picker and watch the choice"],
-	["addDirectory(handle)", "Watch a handle you already hold"],
+	[
+		"addOpfsDirectory(options?)",
+		"Watch browser storage — no prompt, no gesture",
+	],
+	["addDirectory(handle, options?)", "Watch a handle you already hold"],
 	["removeDirectory(path)", "Stop watching, without touching disk"],
 	["refresh()", "Run a scan right now"],
 	["startPolling() / stopPolling()", "Drive the loop by hand"],
@@ -68,9 +73,7 @@ export const Surface = () => (
 	<section className="border-line border-y bg-panel">
 		<div className="u-shell py-16 lg:py-20">
 			<p className="u-eyebrow">Every export</p>
-			<h2 className="u-h2 mt-4 max-w-[22ch]">
-				The entire API fits on one screen.
-			</h2>
+			<h2 className="u-h2 mt-4 max-w-[22ch]">The entire API.</h2>
 
 			<div className="mt-10 grid gap-6 md:grid-cols-3 md:gap-0">
 				<Column title="State" rows={STATE} />
@@ -94,8 +97,8 @@ export const Surface = () => (
 					</p>
 					<p className="mt-4 text-[11.5px] text-faint leading-relaxed">
 						Also exported: walkDirectory, scanDirectories, toContentMap,
-						normalizePath, isFileSystemAccessSupported, getDirectoryPicker,
-						ensurePermission.
+						normalizePath, isFileSystemAccessSupported, isOpfsSupported,
+						getDirectoryPicker, getOpfsRoot, ensurePermission.
 					</p>
 				</div>
 				<Code code={FILTER_SNIPPET} filename="filters.ts" />

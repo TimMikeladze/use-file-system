@@ -49,6 +49,15 @@ const Tagline = () => (
 		>
 			File System Access API
 		</a>
+		<span className="u-eyebrow">+</span>
+		<a
+			href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system"
+			target="_blank"
+			rel="noopener noreferrer"
+			className="u-eyebrow text-add underline decoration-add/30 underline-offset-4 hover:decoration-add"
+		>
+			OPFS
+		</a>
 	</span>
 );
 

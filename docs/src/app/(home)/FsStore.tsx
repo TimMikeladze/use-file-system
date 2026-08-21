@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { commonFilters, useFs } from "use-fs";
+import { commonFilters, getOpfsRoot, useFs } from "use-fs";
 
 /**
  * One watcher for the whole page.
@@ -9,7 +9,34 @@ import { commonFilters, useFs } from "use-fs";
  * The hero panel and the playground are two views of the same directory, so
  * opening a folder at the top of the page fills in everything below it. Two
  * `useFs` calls would mean two independent polling loops over the same tree.
+ *
+ * Either store can fill it: a folder picked off disk, or the origin private
+ * file system. The OPFS mount is what makes the page demonstrable in Safari
+ * and Firefox, which have no directory picker at all.
  */
+
+/** Subdirectory of the OPFS root this page mounts. Never the bare root. */
+const OPFS_DIRECTORY = "use-fs-demo";
+
+/**
+ * Written on the first OPFS mount, so the demo has something to show. Nothing
+ * is seeded again once the directory exists - your own edits survive a reload.
+ */
+const SEED: Record<string, string> = {
+	"README.md": `# Browser storage
+
+You are looking at the origin private file system. These files live in your
+browser, scoped to this origin, and they survive a reload.
+
+Edit one in the viewer and save it. The watcher picks the write up on its next
+scan, exactly as it would for a folder on your disk.
+`,
+	"notes/todo.md": `- [x] Mount the origin private file system
+- [ ] Edit this line and press Save to disk
+- [ ] Reload the page - the change is still here
+`,
+	"notes/scratch.txt": "Anything you write here stays in this browser.\n",
+};
 
 export interface FileEvent {
 	id: string;
@@ -51,6 +78,13 @@ interface FsStore extends Fs {
 	/** Opens the picker and tracks the round trip, for a pending label. */
 	open: () => Promise<void>;
 	isOpening: boolean;
+	/** Mounts the origin private file system, seeding it on first use. */
+	openOpfs: () => Promise<void>;
+	isOpeningOpfs: boolean;
+	/** Whether the root the page is showing came from OPFS, not the picker. */
+	isOpfs: boolean;
+	/** Why the last mount attempt failed, if it did. */
+	mountError: Error | null;
 	/** Everything the hook holds, plus the page state that hangs off it. */
 	reset: () => void;
 }
@@ -61,6 +95,9 @@ export const FsProvider = ({ children }: { children: React.ReactNode }) => {
 	const [events, setEvents] = React.useState<FileEvent[]>([]);
 	const [selection, setSelection] = React.useState<Selection>(EMPTY_SELECTION);
 	const [isOpening, setIsOpening] = React.useState(false);
+	const [isOpeningOpfs, setIsOpeningOpfs] = React.useState(false);
+	const [opfsPath, setOpfsPath] = React.useState<string | null>(null);
+	const [mountError, setMountError] = React.useState<Error | null>(null);
 
 	const fs = useFs({
 		filters: commonFilters,
@@ -97,10 +134,12 @@ export const FsProvider = ({ children }: { children: React.ReactNode }) => {
 		},
 	});
 
-	const { onDirectorySelection, onClear, files } = fs;
+	const { onDirectorySelection, addOpfsDirectory, writeFile, onClear, files } =
+		fs;
 
 	const open = React.useCallback(async () => {
 		setIsOpening(true);
+		setMountError(null);
 		try {
 			await onDirectorySelection();
 		} finally {
@@ -108,10 +147,46 @@ export const FsProvider = ({ children }: { children: React.ReactNode }) => {
 		}
 	}, [onDirectorySelection]);
 
+	const openOpfs = React.useCallback(async () => {
+		setIsOpeningOpfs(true);
+		setMountError(null);
+		try {
+			// Read the directory before mounting it: once the hook has scanned, a
+			// seeded file and a file you wrote last visit look identical.
+			const handle = await getOpfsRoot({ name: OPFS_DIRECTORY });
+			let isEmpty = true;
+			for await (const _entry of handle.values()) {
+				isEmpty = false;
+				break;
+			}
+
+			const path = await addOpfsDirectory({ name: OPFS_DIRECTORY });
+			setOpfsPath(path);
+
+			if (isEmpty) {
+				for (const [name, contents] of Object.entries(SEED)) {
+					await writeFile(`${path}/${name}`, contents);
+				}
+			}
+		} catch (error: unknown) {
+			// A quota failure or a browser that reports OPFS and then refuses it
+			// would otherwise surface as an unhandled rejection.
+			setMountError(
+				error instanceof Error
+					? error
+					: new Error("Browser storage could not be mounted."),
+			);
+		} finally {
+			setIsOpeningOpfs(false);
+		}
+	}, [addOpfsDirectory, writeFile]);
+
 	const reset = React.useCallback(() => {
 		onClear();
 		setEvents([]);
 		setSelection(EMPTY_SELECTION);
+		setOpfsPath(null);
+		setMountError(null);
 	}, [onClear]);
 
 	const selectFile = React.useCallback(
@@ -142,6 +217,11 @@ export const FsProvider = ({ children }: { children: React.ReactNode }) => {
 		applyWrite,
 		open,
 		isOpening,
+		openOpfs,
+		isOpeningOpfs,
+		// The panels label `directories[0]`, so that is the root to describe.
+		isOpfs: opfsPath !== null && fs.directories[0] === opfsPath,
+		mountError,
 		reset,
 	};
 

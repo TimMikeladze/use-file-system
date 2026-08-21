@@ -11,17 +11,18 @@
  * something.
  */
 :root {
-	--ground: #f2f4f7;
+	--ground: #f8fafc;
 	--panel: #ffffff;
-	--raised: #f7f8fa;
-	--inset: #eceff3;
+	--raised: #f1f4f8;
+	--inset: #e7ebf1;
 	--line: rgb(11 15 22 / 0.1);
 	--line-soft: rgb(11 15 22 / 0.06);
 	--line-strong: rgb(11 15 22 / 0.18);
 
 	--text: #0b0f16;
-	--text-dim: #4d5766;
-	--text-faint: #7c8798;
+	--text-dim: #4a5464;
+	/* Holds ~4.7:1 on the lighter ground, so the quiet notes stay readable. */
+	--text-faint: #656f80;
 
 	--add: #0f9c72;
 	--chg: #a8690a;

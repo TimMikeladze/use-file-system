@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAbortError, isNotFoundError, toError } from "./async";
 import { commonFilters } from "./filters";
+import {
+	DEFAULT_OPFS_PATH,
+	getOpfsRoot,
+	isOpfsSupported as isOpfsAvailable,
+	type OpfsMountOptions,
+} from "./opfs";
 import { isAtOrWithin, isWithin, normalizePath, pathSegments } from "./path";
 import {
 	DEFAULT_BATCH_SIZE,
@@ -9,6 +15,7 @@ import {
 	toContentMap,
 } from "./scan";
 import {
+	type AddDirectoryOptions,
 	type DirectoryPickerOptions,
 	ensurePermission,
 	type FileRecord,
@@ -79,6 +86,11 @@ export interface UseFileSystemOptions {
 	processingIndicatorDelay?: number;
 }
 
+/** Options for {@link UseFileSystemResult.addOpfsDirectory}. */
+export interface AddOpfsDirectoryOptions
+	extends OpfsMountOptions,
+		AddDirectoryOptions {}
+
 interface Snapshot {
 	files: Map<string, string>;
 	handles: Map<string, FileSystemFileHandle>;
@@ -136,11 +148,13 @@ export const useFileSystem = (options: UseFileSystemOptions = {}) => {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [isPolling, setIsPolling] = useState(false);
 	const [isBrowserSupported, setIsBrowserSupported] = useState(false);
+	const [isOpfsSupported, setIsOpfsSupported] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 
 	// Resolved on the client only, so server rendering and hydration agree.
 	useEffect(() => {
 		setIsBrowserSupported(isFileSystemAccessSupported());
+		setIsOpfsSupported(isOpfsAvailable());
 	}, []);
 
 	useEffect(() => {
@@ -426,21 +440,37 @@ export const useFileSystem = (options: UseFileSystemOptions = {}) => {
 	/**
 	 * Watches `handle`, returning the path it is exposed under.
 	 *
-	 * Use this to restore a handle persisted in IndexedDB across sessions.
-	 * Adding a handle that is already watched is a no-op.
+	 * Use this to restore a handle persisted in IndexedDB across sessions, or to
+	 * watch a handle from any other source - an OPFS directory included. Adding
+	 * a handle that is already watched is a no-op.
+	 *
+	 * The handle's own name is the path by default. Pass `path` to override it,
+	 * which an unnamed handle such as the OPFS root requires.
 	 */
 	const addDirectory = useCallback(
-		async (handle: FileSystemDirectoryHandle): Promise<string> => {
+		async (
+			handle: FileSystemDirectoryHandle,
+			addOptions: AddDirectoryOptions = {},
+		): Promise<string> => {
 			for (const [path, existing] of directoriesRef.current) {
 				if (existing === handle || (await existing.isSameEntry(handle))) {
 					return path;
 				}
 			}
 
-			let path = handle.name;
+			const requested = addOptions.path ?? handle.name;
+
+			if (!requested) {
+				throw new TypeError(
+					"This handle has no name, so it needs an explicit `path` to be watched. The origin private file system root is the usual case - use `addOpfsDirectory` instead.",
+				);
+			}
+
+			const base = normalizePath(requested);
+			let path = base;
 
 			for (let suffix = 2; directoriesRef.current.has(path); suffix += 1) {
-				path = `${handle.name} (${suffix})`;
+				path = `${base} (${suffix})`;
 			}
 
 			directoriesRef.current.set(path, handle);
@@ -491,6 +521,28 @@ export const useFileSystem = (options: UseFileSystemOptions = {}) => {
 			}
 		},
 		[addDirectory, optionsRef, reportError],
+	);
+
+	/**
+	 * Watches the origin private file system, returning the path it is exposed
+	 * under.
+	 *
+	 * Unlike {@link onDirectorySelection} this needs no picker, no permission and
+	 * no user gesture, and it works in every browser with OPFS - Safari and
+	 * Firefox included. Pass `name` to mount a subdirectory rather than the
+	 * whole root, which is shared with every other library on the origin.
+	 *
+	 * @throws {Error} when the browser has no OPFS.
+	 */
+	const addOpfsDirectory = useCallback(
+		async (opfsOptions: AddOpfsDirectoryOptions = {}): Promise<string> => {
+			const handle = await getOpfsRoot(opfsOptions);
+
+			return await addDirectory(handle, {
+				path: opfsOptions.path ?? opfsOptions.name ?? DEFAULT_OPFS_PATH,
+			});
+		},
+		[addDirectory],
 	);
 
 	const forgetPaths = useCallback(
@@ -759,12 +811,15 @@ export const useFileSystem = (options: UseFileSystemOptions = {}) => {
 		isProcessing,
 		/** Whether the hook is polling for changes. */
 		isPolling,
-		/** Whether this browser implements the File System Access API. */
+		/** Whether this browser implements the File System Access API picker. */
 		isBrowserSupported,
+		/** Whether this browser implements the origin private file system. */
+		isOpfsSupported,
 		/** The most recent recoverable error, if any. */
 		error,
 		onDirectorySelection,
 		addDirectory,
+		addOpfsDirectory,
 		removeDirectory,
 		onClear: clear,
 		refresh,

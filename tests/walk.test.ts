@@ -25,6 +25,28 @@ describe("walkDirectory", () => {
 		expect(result.unreadableDirectories).toEqual([]);
 	});
 
+	it("keeps relative paths intact for an unnamed root", async () => {
+		// `walkDirectory` is public, and the OPFS root handle's name is "".
+		const fs = new MockFileSystem("", {
+			"a.txt": "a",
+			src: { "index.ts": "i" },
+		});
+		const seen: string[] = [];
+		const filters = await instantiate([
+			createFilter({
+				shouldIncludeFile: ({ relativePath }) => {
+					seen.push(relativePath);
+					return true;
+				},
+			}),
+		]);
+
+		const result = await walkDirectory(fs.handle, "", filters);
+
+		expect(Array.from(result.files.keys())).toEqual(["a.txt", "src/index.ts"]);
+		expect(seen).toEqual(["a.txt", "src/index.ts"]);
+	});
+
 	it("prunes directories instead of walking into them", async () => {
 		const fs = new MockFileSystem("root", {
 			"a.txt": "a",

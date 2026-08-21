@@ -9,6 +9,7 @@ const EXPECTED_EXPORTS = [
 	"DEFAULT_EXCLUDED_DIRECTORIES",
 	"DEFAULT_EXCLUDED_FILES",
 	"DEFAULT_EXCLUDED_FILE_SUFFIXES",
+	"DEFAULT_OPFS_PATH",
 	"DEFAULT_POLL_INTERVAL",
 	"DEFAULT_PROCESSING_INDICATOR_DELAY",
 	"basename",
@@ -20,11 +21,13 @@ const EXPECTED_EXPORTS = [
 	"distFilter",
 	"ensurePermission",
 	"getDirectoryPicker",
+	"getOpfsRoot",
 	"gitFilter",
 	"isAbortError",
 	"isAtOrWithin",
 	"isFileSystemAccessSupported",
 	"isNotFoundError",
+	"isOpfsSupported",
 	"isWithin",
 	"joinPath",
 	"mapLimit",
@@ -50,6 +53,7 @@ describe("public API", () => {
 	it("reports no File System Access API in a plain jsdom window", () => {
 		expect(useFsPackage.isFileSystemAccessSupported()).toBe(false);
 		expect(useFsPackage.getDirectoryPicker()).toBeNull();
+		expect(useFsPackage.isOpfsSupported()).toBe(false);
 	});
 
 	it("treats handles without the permission API as already granted", async () => {

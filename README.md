@@ -1,12 +1,15 @@
 # 🗂️ use-fs
 
-A React hook for integrating with the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API). Visit [**use-fs.com**](https://use-fs.com) to try it out in your browser.
+A React hook for integrating with the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API) and the [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system). Visit [**use-fs.com**](https://use-fs.com) to try it out in your browser.
 
-The File System Access API enables web applications to seamlessly work with files on a user's local system. After a user grants permission, web apps can read, write, and manage files directly - eliminating the need for repeated file selection dialogs. This capability is ideal for creating powerful browser-based tools.
+Point the hook at a directory and it watches everything inside it, re-rendering when a file is added, changed or deleted. That directory can be either of two things:
 
-Unlike traditional file selection dialogs, the user will be prompted to select a directory, the hook will watch the files in that directory for changes - rerendering when changes are detected.
+- **A folder on disk**, chosen by the user through the directory picker. Read, write and manage real files directly, with no repeated file dialogs and nothing uploaded anywhere.
+- **The origin private file system (OPFS)**, a private store scoped to your origin. No picker, no permission prompt, and it works in every modern browser.
 
-> ⚠️ Note: The File System API is not supported in all browsers. Works on Desktop in Chrome, Edge and Opera.
+Both are the same `FileSystemDirectoryHandle` underneath, so they are the same hook, the same `files` map and the same writes - only the backing store changes.
+
+> ⚠️ Note: The directory picker is desktop Chrome, Edge and Opera only - check `isBrowserSupported`. OPFS works in every current browser - check `isOpfsSupported`. See [which store to use](#-picker-or-opfs).
 
 ## 📡 Install
 
@@ -91,6 +94,99 @@ function App() {
 
 Paths are POSIX-style and always prefixed with the name of the watched root directory, e.g. `my-project/src/index.ts`. Every path passed to `writeFile`, `createFile`, `deleteFile` and `deleteDirectory` must resolve inside a watched directory; `.` and `..` segments are rejected.
 
+## ⚖️ Picker or OPFS?
+
+Same hook, same `files` map, same writes. What differs is who owns the bytes and what the browser asks the user first.
+
+| | Folder on disk | Browser storage (OPFS) |
+| --- | --- | --- |
+| Entry point | `onDirectorySelection()`, or `addDirectory(handle)` | `addOpfsDirectory()` |
+| Support flag | `isBrowserSupported` | `isOpfsSupported` |
+| Browsers | Chrome, Edge, Opera - desktop only | Chrome, Edge, Opera, Safari 17+, Firefox 111+ |
+| The user sees | A picker, then a permission prompt on first write | Nothing at all |
+| User gesture | Required - call it from an event handler | Not required - an effect is fine |
+| Where the bytes are | Real files, wherever the user pointed you | A private store scoped to your origin |
+| Readable by other apps | Yes - their editor, their terminal, their backups | No - only this origin, only through the API |
+| Across a reload | Contents survive; access does not. Re-prompt, or persist the handle in IndexedDB | Both survive. Mount it again and it is all there |
+| Cleared by | The user, in their own file manager | Clearing site data, or eviction under storage pressure |
+| Capacity | The disk | A quota. `navigator.storage.estimate()` reports it |
+| Changed behind your back | Constantly - that is the point | Only by your own workers or another tab |
+
+**Reach for the picker** when the files are the user's and they already care about them: an editor, a linter, a local-first tool that has to interoperate with git and the rest of their machine.
+
+**Reach for OPFS** when the files are your app's: a cache, a scratch workspace, a WASM database, drafts that should survive a reload. Also when you simply need the feature to exist in Safari and Firefox.
+
+Nothing forces the choice - the two are watched by the same hook, so you can offer both and let support decide:
+
+```tsx
+const {
+  isBrowserSupported,
+  isOpfsSupported,
+  onDirectorySelection,
+  addOpfsDirectory,
+  directories,
+} = useFs();
+
+<button onClick={() => onDirectorySelection()} disabled={!isBrowserSupported}>
+  Open a folder
+</button>
+<button onClick={() => addOpfsDirectory({ name: "workspace" })} disabled={!isOpfsSupported}>
+  Use browser storage
+</button>
+
+// Both roots land here, and `files` spans them.
+<p>Watching: {directories.join(", ") || "nothing yet"}</p>
+```
+
+## 💾 Origin private file system
+
+`addOpfsDirectory()` watches the origin private file system instead of a folder on disk. There is no picker, no permission prompt and no user gesture requirement, so it can be called straight from an effect - and it works in Safari and Firefox, which have no directory picker at all.
+
+```tsx
+import { useEffect } from "react";
+import { useFs } from "use-fs";
+
+function Notes() {
+  const { files, addOpfsDirectory, isOpfsSupported, writeFile } = useFs({
+    // Nothing outside this tab writes to OPFS unless a worker or another tab
+    // does, so drive scans by hand when you own every write.
+    autoStartPolling: false,
+  });
+
+  useEffect(() => {
+    if (isOpfsSupported) {
+      // Mounts <opfs>/notes, creating it if it does not exist.
+      addOpfsDirectory({ name: "notes" });
+    }
+  }, [isOpfsSupported, addOpfsDirectory]);
+
+  return (
+    <button onClick={() => writeFile("notes/todo.md", "buy milk")}>
+      Save ({files.size} files)
+    </button>
+  );
+}
+```
+
+Everything the hook does works the same way against an OPFS mount: filters, `refresh`, polling, `writeFile`, `createFile`, `deleteFile`, `deleteDirectory`. Both stores can be watched at once - `addOpfsDirectory()` and `onDirectorySelection()` add roots to the same `directories` list.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `name` | – | Subdirectory of the OPFS root to mount, e.g. `notes` or `notes/2026` |
+| `create` | `true` | Create that subdirectory when it does not exist |
+| `path` | `name`, else `"opfs"` | Path the mount is exposed under |
+
+**Pass `name`.** The OPFS root is shared by everything on the origin - SQLite WASM journals, Emscripten scratch files, other libraries - so mounting it whole means walking all of that on every scan. A named subdirectory is yours alone.
+
+Worth knowing:
+
+- Contents survive a reload and are private to the origin. The user can wipe them by clearing site data, and the browser may evict them under storage pressure - call `navigator.storage.persist()` to ask for protection.
+- Changes are detected from `lastModified` and `size`. OPFS writes are fast enough that a same-size rewrite inside a single millisecond can be missed, which only matters for writes coming from a worker or another tab - writes made through the hook update state directly.
+- `createSyncAccessHandle` is worker-only and is not used here. The hook writes through `createWritable`, which needs Chrome 86+, Safari 17+ or Firefox 111+.
+- Quota is finite. A write that exceeds it rejects with `QuotaExceededError`, surfaced through `error` and `onError`. `navigator.storage.estimate()` reports the headroom.
+
+`getOpfsRoot()` and `isOpfsSupported()` are exported too, for reaching the handle directly - `(await getOpfsRoot({ name: "notes" })).removeEntry("todo.md")`.
+
 ## 🔍 How watching works
 
 The hook re-scans every watched directory on an interval:
@@ -109,6 +205,8 @@ Scans never throw. A directory that cannot be enumerated (revoked permission, re
 const fs = useFs({ mode: "readwrite" });
 ```
 
+OPFS needs none of this: an OPFS handle carries no permission at all, so `addOpfsDirectory` and every write against it work without a prompt or a gesture.
+
 `addDirectory` accepts a handle directly, which is how you restore access across sessions after persisting a handle in IndexedDB:
 
 ```tsx
@@ -117,6 +215,12 @@ const handle = await loadHandleFromIndexedDb();
 if ((await handle.queryPermission({ mode: "read" })) === "granted") {
   await fs.addDirectory(handle);
 }
+```
+
+The handle's own name is the path it is watched under. Pass `path` to override it, which a handle with no name - the OPFS root is the one that occurs in practice - requires:
+
+```tsx
+await fs.addDirectory(handle, { path: "storage" });
 ```
 
 ## 🧹 Filters
@@ -181,10 +285,12 @@ Options are read at the moment they are used, so inline callbacks and filter arr
 | `directories: string[]` | Paths of the watched root directories |
 | `isProcessing: boolean` | Whether a scan has been running long enough to be worth showing |
 | `isPolling: boolean` | Whether the hook is polling for changes |
-| `isBrowserSupported: boolean` | Whether the File System Access API is available |
+| `isBrowserSupported: boolean` | Whether the directory picker is available |
+| `isOpfsSupported: boolean` | Whether the origin private file system is available |
 | `error: Error \| null` | The most recent recoverable error |
 | `onDirectorySelection(options?)` | Opens the picker and watches the chosen directory. Resolves to its path, or `null` if the picker was dismissed |
-| `addDirectory(handle)` | Watches an existing handle. Resolves to the path it is exposed under |
+| `addDirectory(handle, options?)` | Watches an existing handle. Resolves to the path it is exposed under |
+| `addOpfsDirectory(options?)` | Watches the origin private file system. Resolves to the path it is exposed under |
 | `removeDirectory(path)` | Stops watching a directory without touching disk |
 | `onClear()` | Stops watching everything and resets the hook |
 | `refresh()` | Runs a scan immediately |
@@ -199,7 +305,7 @@ Options are read at the moment they are used, so inline callbacks and filter arr
 
 ### Lower-level exports
 
-`walkDirectory`, `scanDirectories`, `toContentMap`, `normalizePath`, `isFileSystemAccessSupported`, `getDirectoryPicker` and `ensurePermission` are exported for building on top of the same primitives the hook uses.
+`walkDirectory`, `scanDirectories`, `toContentMap`, `normalizePath`, `isFileSystemAccessSupported`, `isOpfsSupported`, `getDirectoryPicker`, `getOpfsRoot` and `ensurePermission` are exported for building on top of the same primitives the hook uses.
 
 ## 📚 Contributing
 
@@ -214,9 +320,10 @@ straight away.
 4. Navigate to `http://localhost:3000` to view the demo
 
 The landing page lives in `docs/src/app/(home)`. A single `useFs` call sits in
-`FsStore.tsx` and is shared through context, so the hero's `LivePanel.tsx` and
-the `Demo.tsx` playground watch the same directory. `LivePanel.tsx` also runs a
-scripted preview until a folder is opened. Design tokens - the three event
+`FsStore.tsx` and is shared through context, so the hero's `LivePanel.tsx`, the
+`Stores.tsx` comparison and the `Demo.tsx` playground all watch the same
+directory - whether it came from the picker or from OPFS. `LivePanel.tsx` also
+runs a scripted preview until a directory is opened. Design tokens - the three event
 colours, the type roles, the grid - are in `docs/src/app/global.css`.
 
 When changing the package itself, run `pnpm dev` at the repository root in a

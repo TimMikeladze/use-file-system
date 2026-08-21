@@ -177,6 +177,8 @@ export const LivePanel = () => {
 		isPolling,
 		isProcessing,
 		isBrowserSupported,
+		isOpfsSupported,
+		isOpfs,
 		reset,
 		startPolling,
 		stopPolling,
@@ -217,6 +219,13 @@ export const LivePanel = () => {
 		: preview.log;
 
 	const marked = log[0];
+	// What the footer offers depends on which store this browser can reach.
+	let idleHint = "Needs a browser with the File System Access API.";
+	if (isBrowserSupported) {
+		idleHint = "Open a folder to watch your own.";
+	} else if (isOpfsSupported) {
+		idleHint = "No directory picker here — mount browser storage instead.";
+	}
 	const overflow = isReal ? Math.max(0, paths.length - TREE_ROWS) : 0;
 	const fileCount = isReal ? files.size : rows.filter((r) => !r.dir).length;
 	const scanning = isReal ? isProcessing : preview.animated;
@@ -391,7 +400,9 @@ export const LivePanel = () => {
 					<>
 						<span className="u-eyebrow text-add">live</span>
 						<span className="min-w-0 flex-1 truncate text-[11.5px] text-faint">
-							Edit a file in {root} and watch it land here.
+							{isOpfs
+								? `Write to ${root} in the playground and watch it land here.`
+								: `Edit a file in ${root} and watch it land here.`}
 						</span>
 						<a
 							href="#playground"
@@ -403,11 +414,7 @@ export const LivePanel = () => {
 				) : (
 					<>
 						<span className="u-eyebrow text-chg">preview</span>
-						<span className="text-[11.5px] text-faint">
-							{isBrowserSupported
-								? "Open a folder to watch your own."
-								: "Needs desktop Chrome, Edge or Opera."}
-						</span>
+						<span className="text-[11.5px] text-faint">{idleHint}</span>
 					</>
 				)}
 			</div>

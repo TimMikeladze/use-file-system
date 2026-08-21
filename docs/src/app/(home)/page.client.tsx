@@ -4,6 +4,7 @@ import { Events } from "./Events";
 import { Footer } from "./Footer";
 import { FsProvider } from "./FsStore";
 import { Hero } from "./Hero";
+import { Stores } from "./Stores";
 import { Surface } from "./Surface";
 import { Usage } from "./Usage";
 
@@ -14,6 +15,7 @@ export default function HomePage() {
 			<main className="flex flex-1 flex-col">
 				<Hero />
 				<Events />
+				<Stores />
 				<Usage />
 				<Demo />
 				<Surface />

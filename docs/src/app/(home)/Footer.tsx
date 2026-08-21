@@ -5,6 +5,10 @@ const LINKS = [
 		label: "MDN · File System Access API",
 		href: "https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API",
 	},
+	{
+		label: "MDN · Origin private file system",
+		href: "https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system",
+	},
 ];
 
 export const Footer = () => (

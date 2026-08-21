@@ -33,7 +33,12 @@ interface PendingDirectory {
 const createContext = (path: string, rootPath: string): FilterContext => ({
 	path,
 	rootPath,
-	relativePath: path === rootPath ? "" : path.slice(rootPath.length + 1),
+	// An unnamed root (the OPFS root handle's `name` is the empty string) has no
+	// prefix to strip, so there is no separator to skip either.
+	relativePath:
+		path === rootPath
+			? ""
+			: path.slice(rootPath.length > 0 ? rootPath.length + 1 : 0),
 	name: basename(path),
 });
 

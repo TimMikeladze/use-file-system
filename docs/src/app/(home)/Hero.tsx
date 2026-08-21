@@ -26,26 +26,55 @@ const installSlots = {
 
 /** Four facts a developer decides on before reading any further. */
 const SPECS = [
-	["Runs in", "Chrome · Edge · Opera, desktop"],
+	["Folder on disk", "Chrome · Edge · Opera, desktop"],
+	["Browser storage", "Chrome · Edge · Opera · Safari · Firefox"],
 	["Talks to", "Nothing. No server, no upload"],
-	["Access", "Read by default, write on request"],
-	["Licence", "MIT · zero dependencies"],
+	["Licence", "MIT"],
 ];
 
-/** The page's one primary action. The panel beside it shows the result. */
-const HeroOpenButton = () => {
-	const { open, isOpening, isBrowserSupported, directories } = useFsStore();
+/**
+ * The page's two entry points, side by side because they are equals: one asks
+ * the user for a folder, the other needs nothing at all. The panel beside them
+ * shows whichever one you pick.
+ */
+const HeroActions = () => {
+	const {
+		open,
+		isOpening,
+		openOpfs,
+		isOpeningOpfs,
+		isBrowserSupported,
+		isOpfsSupported,
+		directories,
+	} = useFsStore();
+	const busy = isOpening || isOpeningOpfs;
 	const label =
 		directories.length > 0 ? "Open another folder" : "Open a folder";
+
 	return (
-		<button
-			type="button"
-			onClick={open}
-			disabled={isOpening || !isBrowserSupported}
-			className="border border-line-strong bg-text px-4 py-2.5 text-[12px] text-ground transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
-		>
-			{isOpening ? "Opening…" : label}
-		</button>
+		<>
+			<button
+				type="button"
+				onClick={open}
+				disabled={busy || !isBrowserSupported}
+				title={
+					isBrowserSupported
+						? undefined
+						: "The directory picker needs desktop Chrome, Edge or Opera."
+				}
+				className="border border-line-strong bg-text px-4 py-2.5 text-[12px] text-ground transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+			>
+				{isOpening ? "Opening…" : label}
+			</button>
+			<button
+				type="button"
+				onClick={openOpfs}
+				disabled={busy || !isOpfsSupported}
+				className="border border-line-strong px-4 py-2.5 text-[12px] text-text transition-colors hover:bg-inset disabled:cursor-not-allowed disabled:opacity-40"
+			>
+				{isOpeningOpfs ? "Mounting…" : "Use browser storage"}
+			</button>
+		</>
 	);
 };
 
@@ -63,6 +92,15 @@ export const Hero = () => (
 				>
 					File System Access API
 				</a>
+				<span className="u-eyebrow">+</span>
+				<a
+					href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system"
+					target="_blank"
+					rel="noopener noreferrer"
+					className="u-eyebrow text-add underline decoration-add/30 underline-offset-4 hover:decoration-add"
+				>
+					OPFS
+				</a>
 			</div>
 		</div>
 
@@ -76,9 +114,9 @@ export const Hero = () => (
 
 				<p className="mt-6 max-w-[52ch] text-[14.5px] text-dim leading-[1.75]">
 					Point <span className="text-text">useFs()</span> at a folder on your
-					machine. Your component gets everything inside it, and re-renders the
-					moment a file is added, changed or deleted. No upload, no refresh, no
-					second file dialog.
+					machine, or at the browser's own private storage. Your component gets
+					everything inside it, and re-renders the moment a file is added,
+					changed or deleted. No upload, no refresh, no second file dialog.
 				</p>
 
 				<div className="u-install mt-8 max-w-[30rem]">
@@ -86,10 +124,10 @@ export const Hero = () => (
 				</div>
 
 				<div className="mt-4 flex flex-wrap items-center gap-2.5">
-					<HeroOpenButton />
+					<HeroActions />
 					<a
 						href="#playground"
-						className="border border-line px-4 py-2.5 text-[12px] text-dim transition-colors hover:border-line-strong hover:text-text"
+						className="px-1 text-[12px] text-dim underline decoration-line-strong underline-offset-4 transition-colors hover:text-text"
 					>
 						Full playground
 					</a>
